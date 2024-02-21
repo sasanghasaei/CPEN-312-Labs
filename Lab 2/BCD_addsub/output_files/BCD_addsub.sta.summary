@@ -1,0 +1,85 @@
+------------------------------------------------------------
+Timing Analyzer Summary
+------------------------------------------------------------
+
+Type  : Slow 1100mV 85C Model Setup 'carry_in'
+Slack : -14.792
+TNS   : -86.827
+
+Type  : Slow 1100mV 85C Model Hold 'carry_in'
+Slack : -6.956
+TNS   : -22.137
+
+Type  : Slow 1100mV 85C Model Minimum Pulse Width 'carry_in'
+Slack : -4.816
+TNS   : -101.891
+
+Type  : Slow 1100mV 85C Model Minimum Pulse Width 'enable_a'
+Slack : -0.538
+TNS   : -6.643
+
+Type  : Slow 1100mV 85C Model Minimum Pulse Width 'enable_b'
+Slack : -0.538
+TNS   : -6.448
+
+Type  : Slow 1100mV 0C Model Setup 'carry_in'
+Slack : -14.634
+TNS   : -87.114
+
+Type  : Slow 1100mV 0C Model Hold 'carry_in'
+Slack : -7.038
+TNS   : -22.628
+
+Type  : Slow 1100mV 0C Model Minimum Pulse Width 'carry_in'
+Slack : -4.804
+TNS   : -106.733
+
+Type  : Slow 1100mV 0C Model Minimum Pulse Width 'enable_a'
+Slack : -0.538
+TNS   : -6.464
+
+Type  : Slow 1100mV 0C Model Minimum Pulse Width 'enable_b'
+Slack : -0.538
+TNS   : -6.395
+
+Type  : Fast 1100mV 85C Model Setup 'carry_in'
+Slack : -7.280
+TNS   : -39.521
+
+Type  : Fast 1100mV 85C Model Hold 'carry_in'
+Slack : -3.752
+TNS   : -12.437
+
+Type  : Fast 1100mV 85C Model Minimum Pulse Width 'carry_in'
+Slack : -2.944
+TNS   : -51.243
+
+Type  : Fast 1100mV 85C Model Minimum Pulse Width 'enable_a'
+Slack : -0.302
+TNS   : -2.520
+
+Type  : Fast 1100mV 85C Model Minimum Pulse Width 'enable_b'
+Slack : -0.259
+TNS   : -2.117
+
+Type  : Fast 1100mV 0C Model Setup 'carry_in'
+Slack : -6.532
+TNS   : -36.075
+
+Type  : Fast 1100mV 0C Model Hold 'carry_in'
+Slack : -3.336
+TNS   : -11.095
+
+Type  : Fast 1100mV 0C Model Minimum Pulse Width 'carry_in'
+Slack : -2.577
+TNS   : -43.238
+
+Type  : Fast 1100mV 0C Model Minimum Pulse Width 'enable_a'
+Slack : -0.291
+TNS   : -2.431
+
+Type  : Fast 1100mV 0C Model Minimum Pulse Width 'enable_b'
+Slack : -0.258
+TNS   : -2.118
+
+------------------------------------------------------------

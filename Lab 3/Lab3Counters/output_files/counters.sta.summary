@@ -1,0 +1,293 @@
+------------------------------------------------------------
+Timing Analyzer Summary
+------------------------------------------------------------
+
+Type  : Slow 1100mV 85C Model Setup 'ClkFlag'
+Slack : -10.449
+TNS   : -251.664
+
+Type  : Slow 1100mV 85C Model Setup 'set_time'
+Slack : -10.194
+TNS   : -232.851
+
+Type  : Slow 1100mV 85C Model Setup 'ALARM_SETTER'
+Slack : -9.633
+TNS   : -208.510
+
+Type  : Slow 1100mV 85C Model Setup 'CLK_50'
+Slack : -5.650
+TNS   : -235.665
+
+Type  : Slow 1100mV 85C Model Hold 'ALARM_SETTER'
+Slack : -2.252
+TNS   : -10.274
+
+Type  : Slow 1100mV 85C Model Hold 'set_time'
+Slack : -1.692
+TNS   : -5.614
+
+Type  : Slow 1100mV 85C Model Hold 'CLK_50'
+Slack : 0.425
+TNS   : 0.000
+
+Type  : Slow 1100mV 85C Model Hold 'ClkFlag'
+Slack : 0.751
+TNS   : 0.000
+
+Type  : Slow 1100mV 85C Model Recovery 'ClkFlag'
+Slack : -6.696
+TNS   : -176.584
+
+Type  : Slow 1100mV 85C Model Recovery 'set_time'
+Slack : -5.911
+TNS   : -262.719
+
+Type  : Slow 1100mV 85C Model Recovery 'ALARM_SETTER'
+Slack : -5.365
+TNS   : -238.783
+
+Type  : Slow 1100mV 85C Model Removal 'ALARM_SETTER'
+Slack : 0.449
+TNS   : 0.000
+
+Type  : Slow 1100mV 85C Model Removal 'set_time'
+Slack : 0.839
+TNS   : 0.000
+
+Type  : Slow 1100mV 85C Model Removal 'ClkFlag'
+Slack : 1.559
+TNS   : 0.000
+
+Type  : Slow 1100mV 85C Model Minimum Pulse Width 'CLK_50'
+Slack : -0.538
+TNS   : -55.964
+
+Type  : Slow 1100mV 85C Model Minimum Pulse Width 'ClkFlag'
+Slack : -0.538
+TNS   : -23.910
+
+Type  : Slow 1100mV 85C Model Minimum Pulse Width 'ALARM_SETTER'
+Slack : -0.083
+TNS   : -0.151
+
+Type  : Slow 1100mV 85C Model Minimum Pulse Width 'set_time'
+Slack : -0.020
+TNS   : -0.020
+
+Type  : Slow 1100mV 0C Model Setup 'ClkFlag'
+Slack : -10.688
+TNS   : -256.355
+
+Type  : Slow 1100mV 0C Model Setup 'set_time'
+Slack : -10.280
+TNS   : -237.700
+
+Type  : Slow 1100mV 0C Model Setup 'ALARM_SETTER'
+Slack : -9.711
+TNS   : -212.909
+
+Type  : Slow 1100mV 0C Model Setup 'CLK_50'
+Slack : -5.745
+TNS   : -230.982
+
+Type  : Slow 1100mV 0C Model Hold 'ALARM_SETTER'
+Slack : -2.293
+TNS   : -11.378
+
+Type  : Slow 1100mV 0C Model Hold 'set_time'
+Slack : -1.723
+TNS   : -6.225
+
+Type  : Slow 1100mV 0C Model Hold 'CLK_50'
+Slack : 0.434
+TNS   : 0.000
+
+Type  : Slow 1100mV 0C Model Hold 'ClkFlag'
+Slack : 0.755
+TNS   : 0.000
+
+Type  : Slow 1100mV 0C Model Recovery 'ClkFlag'
+Slack : -6.857
+TNS   : -181.087
+
+Type  : Slow 1100mV 0C Model Recovery 'set_time'
+Slack : -6.100
+TNS   : -271.569
+
+Type  : Slow 1100mV 0C Model Recovery 'ALARM_SETTER'
+Slack : -5.531
+TNS   : -247.658
+
+Type  : Slow 1100mV 0C Model Removal 'ALARM_SETTER'
+Slack : 0.629
+TNS   : 0.000
+
+Type  : Slow 1100mV 0C Model Removal 'set_time'
+Slack : 1.053
+TNS   : 0.000
+
+Type  : Slow 1100mV 0C Model Removal 'ClkFlag'
+Slack : 1.562
+TNS   : 0.000
+
+Type  : Slow 1100mV 0C Model Minimum Pulse Width 'CLK_50'
+Slack : -0.538
+TNS   : -56.777
+
+Type  : Slow 1100mV 0C Model Minimum Pulse Width 'ClkFlag'
+Slack : -0.538
+TNS   : -23.444
+
+Type  : Slow 1100mV 0C Model Minimum Pulse Width 'ALARM_SETTER'
+Slack : -0.023
+TNS   : -0.023
+
+Type  : Slow 1100mV 0C Model Minimum Pulse Width 'set_time'
+Slack : 0.024
+TNS   : 0.000
+
+Type  : Fast 1100mV 85C Model Setup 'set_time'
+Slack : -5.071
+TNS   : -106.429
+
+Type  : Fast 1100mV 85C Model Setup 'ClkFlag'
+Slack : -5.008
+TNS   : -118.789
+
+Type  : Fast 1100mV 85C Model Setup 'ALARM_SETTER'
+Slack : -4.915
+TNS   : -97.257
+
+Type  : Fast 1100mV 85C Model Setup 'CLK_50'
+Slack : -3.119
+TNS   : -82.965
+
+Type  : Fast 1100mV 85C Model Hold 'ALARM_SETTER'
+Slack : -1.296
+TNS   : -6.662
+
+Type  : Fast 1100mV 85C Model Hold 'set_time'
+Slack : -1.157
+TNS   : -5.569
+
+Type  : Fast 1100mV 85C Model Hold 'CLK_50'
+Slack : 0.199
+TNS   : 0.000
+
+Type  : Fast 1100mV 85C Model Hold 'ClkFlag'
+Slack : 0.296
+TNS   : 0.000
+
+Type  : Fast 1100mV 85C Model Recovery 'ClkFlag'
+Slack : -3.133
+TNS   : -81.119
+
+Type  : Fast 1100mV 85C Model Recovery 'set_time'
+Slack : -2.458
+TNS   : -103.519
+
+Type  : Fast 1100mV 85C Model Recovery 'ALARM_SETTER'
+Slack : -2.273
+TNS   : -95.316
+
+Type  : Fast 1100mV 85C Model Removal 'ALARM_SETTER'
+Slack : 0.070
+TNS   : 0.000
+
+Type  : Fast 1100mV 85C Model Removal 'set_time'
+Slack : 0.210
+TNS   : 0.000
+
+Type  : Fast 1100mV 85C Model Removal 'ClkFlag'
+Slack : 0.523
+TNS   : 0.000
+
+Type  : Fast 1100mV 85C Model Minimum Pulse Width 'CLK_50'
+Slack : -0.384
+TNS   : -7.232
+
+Type  : Fast 1100mV 85C Model Minimum Pulse Width 'ALARM_SETTER'
+Slack : -0.226
+TNS   : -7.434
+
+Type  : Fast 1100mV 85C Model Minimum Pulse Width 'set_time'
+Slack : -0.202
+TNS   : -10.371
+
+Type  : Fast 1100mV 85C Model Minimum Pulse Width 'ClkFlag'
+Slack : -0.057
+TNS   : -0.724
+
+Type  : Fast 1100mV 0C Model Setup 'ClkFlag'
+Slack : -4.672
+TNS   : -110.539
+
+Type  : Fast 1100mV 0C Model Setup 'set_time'
+Slack : -4.553
+TNS   : -96.147
+
+Type  : Fast 1100mV 0C Model Setup 'ALARM_SETTER'
+Slack : -4.404
+TNS   : -87.640
+
+Type  : Fast 1100mV 0C Model Setup 'CLK_50'
+Slack : -2.794
+TNS   : -71.008
+
+Type  : Fast 1100mV 0C Model Hold 'ALARM_SETTER'
+Slack : -1.301
+TNS   : -7.551
+
+Type  : Fast 1100mV 0C Model Hold 'set_time'
+Slack : -1.164
+TNS   : -6.306
+
+Type  : Fast 1100mV 0C Model Hold 'CLK_50'
+Slack : 0.186
+TNS   : 0.000
+
+Type  : Fast 1100mV 0C Model Hold 'ClkFlag'
+Slack : 0.265
+TNS   : 0.000
+
+Type  : Fast 1100mV 0C Model Recovery 'ClkFlag'
+Slack : -2.936
+TNS   : -76.391
+
+Type  : Fast 1100mV 0C Model Recovery 'set_time'
+Slack : -2.241
+TNS   : -94.594
+
+Type  : Fast 1100mV 0C Model Recovery 'ALARM_SETTER'
+Slack : -2.079
+TNS   : -86.928
+
+Type  : Fast 1100mV 0C Model Removal 'ALARM_SETTER'
+Slack : 0.134
+TNS   : 0.000
+
+Type  : Fast 1100mV 0C Model Removal 'set_time'
+Slack : 0.255
+TNS   : 0.000
+
+Type  : Fast 1100mV 0C Model Removal 'ClkFlag'
+Slack : 0.542
+TNS   : 0.000
+
+Type  : Fast 1100mV 0C Model Minimum Pulse Width 'CLK_50'
+Slack : -0.379
+TNS   : -7.282
+
+Type  : Fast 1100mV 0C Model Minimum Pulse Width 'ALARM_SETTER'
+Slack : -0.178
+TNS   : -5.305
+
+Type  : Fast 1100mV 0C Model Minimum Pulse Width 'set_time'
+Slack : -0.151
+TNS   : -7.693
+
+Type  : Fast 1100mV 0C Model Minimum Pulse Width 'ClkFlag'
+Slack : -0.007
+TNS   : -0.035
+
+------------------------------------------------------------

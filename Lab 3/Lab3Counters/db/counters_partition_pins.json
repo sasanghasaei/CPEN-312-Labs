@@ -1,0 +1,249 @@
+{
+	"partitions" : [
+		{
+			"name" : "Top",
+			"pins" : [
+				{
+					"name" : "MSD_sec[6]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_sec[5]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_sec[4]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_sec[3]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_sec[2]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_sec[1]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_sec[0]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_sec[6]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_sec[5]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_sec[4]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_sec[3]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_sec[2]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_sec[1]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_sec[0]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_min[6]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_min[5]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_min[4]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_min[3]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_min[2]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_min[1]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_min[0]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_min[6]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_min[5]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_min[4]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_min[3]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_min[2]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_min[1]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_min[0]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_hour[6]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_hour[5]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_hour[4]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_hour[3]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_hour[2]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_hour[1]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_hour[0]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_hour[6]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_hour[5]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_hour[4]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_hour[3]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_hour[2]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_hour[1]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_hour[0]",
+					"strict" : false
+				},
+				{
+					"name" : "AMPM",
+					"strict" : false
+				},
+				{
+					"name" : "ALARM_ACTIVATED",
+					"strict" : false
+				},
+				{
+					"name" : "debugging",
+					"strict" : false
+				},
+				{
+					"name" : "set_time",
+					"strict" : false
+				},
+				{
+					"name" : "ALARM_SETTER",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_setter[0]",
+					"strict" : false
+				},
+				{
+					"name" : "KEY1",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_setter[1]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_setter[2]",
+					"strict" : false
+				},
+				{
+					"name" : "MSD_setter[3]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_setter[0]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_setter[1]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_setter[2]",
+					"strict" : false
+				},
+				{
+					"name" : "LSD_setter[3]",
+					"strict" : false
+				},
+				{
+					"name" : "KEY2",
+					"strict" : false
+				},
+				{
+					"name" : "KEY3",
+					"strict" : false
+				},
+				{
+					"name" : "KEY0",
+					"strict" : false
+				},
+				{
+					"name" : "CLK_50",
+					"strict" : false
+				}
+			]
+		}
+	]
+}

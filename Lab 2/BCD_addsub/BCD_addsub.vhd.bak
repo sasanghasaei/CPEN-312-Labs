@@ -1,0 +1,66 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+
+entity eightbit_addsub is
+    port(
+        number_tens     : in   std_logic_vector(3 downto 0); -- 4-bit input binary numbers.
+		  number_ones     : in   std_logic_vector(3 downto 0); -- 4-bit input binary numbers.
+        carry_in : in   std_logic;
+		  enable_a : in   std_logic; -- when this is high, the latch is triggered and we save binary number a
+		  enable_b : in   std_logic; -- when this is high, the latch is triggered and we save binary number b
+		  subflag  : in   std_logic; -- when high, we know that we should subtract and not add
+        sum_tens      : out  std_logic_vector(3 downto 0); -- 8-bit output binary number
+		  sum_ones      : out  std_logic_vector(3 downto 0);
+        carry    : out  std_logic
+		  
+		  
+    );
+end eightbit_addsub;
+
+architecture a of eightbit_addsub is
+	signal sum_temp_ones : std_logic_vector(4 downto 0); 
+	signal sum_temp_tens : std_logic_vector(4 downto 0);
+	signal latch_temp_a_ones: std_logic_vector(3 downto 0);
+	signal latch_temp_a_tens: std_logic_vector(3 downto 0);
+	signal latch_temp_b_ones: std_logic_vector(3 downto 0);
+	signal latch_temp_b_tens: std_logic_vector(3 downto 0);
+	-- signal latch_temp_b_not: std_logic_vector(7 downto 0);
+	
+begin
+
+	process(enable_a)
+	begin
+		if enable_a = '1' then
+			latch_temp_a_ones <= number_ones; -- store number a when the latch_a is enabled
+			latch_temp_a_tens <= number_tens;
+		end if;		
+	end process;
+	
+	process(enable_b)
+	begin
+		if enable_b = '1' then
+			latch_temp_b_ones <= number_ones; -- store number a when the latch_a is enabled
+			latch_temp_b_tens <= number_tens;
+		end if;
+	end process;
+
+
+	process(latch_temp_a, latch_temp_b, subflag, sum_temp, carry_in)
+	begin
+		
+		 if subflag = '1' then
+			 latch_temp_b_not <= not latch_temp_b;
+			 sum_temp <= ('0' & latch_temp_a) + ('0' & latch_temp_b_not) + ("00000000" & carry_in) + "00000001";
+			 carry <= sum_temp(8);
+			 sum <= sum_temp(7 downto 0);
+			 
+		 else		 
+			 sum_temp <= ('0' & latch_temp_a) + ('0' & latch_temp_b) + ("00000000" & carry_in);
+			 carry <= sum_temp(8);
+			 sum <= sum_temp(7 downto 0);
+		 end if;
+		 
+	end process;   
+
+end a;
