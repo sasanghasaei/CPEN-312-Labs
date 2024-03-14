@@ -1,0 +1,1127 @@
+0000              1   ; Blinky.asm: blinks LEDR0 of the CV-8052 each second.
+0000              2   
+                 -1   $MODDE0CV ; Special Function Registers declaration for CV-8052
+0000              1   ;  MODDDE2: Register definition for DE2-8052 softcore
+0000              2   ;
+0000              3   ;   Copyright (C) 2011  Jesus Calvino-Fraga, jesusc at ece.ubc.ca
+0000              4   ;
+0000              5   ;   This library is free software; you can redistribute it and/or
+0000              6   ;   modify it under the terms of the GNU Lesser General Public
+0000              7   ;   License as published by the Free Software Foundation; either
+0000              8   ;   version 2.1 of the License, or (at your option) any later version.
+0000              9   ;
+0000             10   ;   This library is distributed in the hope that it will be useful,
+0000             11   ;   but WITHOUT ANY WARRANTY; without even the implied warranty of
+0000             12   ;   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+0000             13   ;   Lesser General Public License for more details.
+0000             14   ;
+0000             15   ;   You should have received a copy of the GNU Lesser General Public
+0000             16   ;   License along with this library; if not, write to the Free Software
+0000             17   ;   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+0000             18   ;
+0000             19       
+0000             20   P0     DATA  080H  ;PORT 0
+0000             21   SP     DATA  081H  ;STACK POINTER
+0000             22   DPL    DATA  082H  ;DATA POINTER 0 - LOW BYTE
+0000             23   DPH    DATA  083H  ;DATA POINTER 0 - HIGH BYTE
+0000             24   DPL1   DATA  084H  ;DATA POINTER 1 - LOW BYTE
+0000             25   DPH1   DATA  085H  ;DATA POINTER 1 - HIGH BYTE
+0000             26   DPS    DATA  086H  ;DATA POINTER SELECT. DPH1, DPL1 active when DPS.0=1
+0000             27   PCON   DATA  087H  ;POWER CONTROL
+0000             28   TCON   DATA  088H  ;TIMER CONTROL
+0000             29   TMOD   DATA  089H  ;TIMER MODE
+0000             30   TL0    DATA  08AH  ;TIMER 0 - LOW BYTE
+0000             31   TL1    DATA  08BH  ;TIMER 1 - LOW BYTE
+0000             32   TH0    DATA  08CH  ;TIMER 0 - HIGH BYTE
+0000             33   TH1    DATA  08DH  ;TIMER 1 - HIGH BYTE
+0000             34   P1     DATA  090H  ;PORT 1
+0000             35   SCON   DATA  098H  ;SERIAL PORT CONTROL
+0000             36   SBUF   DATA  099H  ;SERIAL PORT BUFFER
+0000             37   P2     DATA  0A0H  ;PORT 2
+0000             38   IE     DATA  0A8H  ;INTERRUPT ENABLE
+0000             39   P3     DATA  0B0H  ;PORT 3
+0000             40   IP     DATA  0B8H  ;INTERRUPT PRIORITY
+0000             41   T2CON  DATA  0C8H  ;TIMER 2 CONTROL
+0000             42   T2MOD  DATA  0C9H  ;TIMER 2 MODE
+0000             43   RCAP2L DATA  0CAH  ;TIMER 2 CAPTURE REGISTER - LOW BYTE
+0000             44   RCAP2H DATA  0CBH  ;TIMER 2 CAPTURE REGISTER - HIGH BYTE
+0000             45   TL2    DATA  0CCH  ;TIMER 2 - LOW BYTE
+0000             46   TH2    DATA  0CDH  ;TIMER 2 - HIGH BYTE
+0000             47   PSW    DATA  0D0H  ;PROGRAM STATUS WORD
+0000             48   ACC    DATA  0E0H  ;ACCUMULATOR
+0000             49   B      DATA  0F0H  ;MULTIPLICATION REGISTER
+0000             50   IT0    BIT   088H  ;TCON.0 - EXT. INTERRUPT 0 TYPE
+0000             51   IE0    BIT   089H  ;TCON.1 - EXT. INTERRUPT 0 EDGE FLAG
+0000             52   IT1    BIT   08AH  ;TCON.2 - EXT. INTERRUPT 1 TYPE
+0000             53   IE1    BIT   08BH  ;TCON.3 - EXT. INTERRUPT 1 EDGE FLAG
+0000             54   TR0    BIT   08CH  ;TCON.4 - TIMER 0 ON/OFF CONTROL
+0000             55   TF0    BIT   08DH  ;TCON.5 - TIMER 0 OVERFLOW FLAG
+0000             56   TR1    BIT   08EH  ;TCON.6 - TIMER 1 ON/OFF CONTROL
+0000             57   TF1    BIT   08FH  ;TCON.7 - TIMER 1 OVERFLOW FLAG
+0000             58   RI     BIT   098H  ;SCON.0 - RECEIVE INTERRUPT FLAG
+0000             59   TI     BIT   099H  ;SCON.1 - TRANSMIT INTERRUPT FLAG
+0000             60   RB8    BIT   09AH  ;SCON.2 - RECEIVE BIT 8
+0000             61   TB8    BIT   09BH  ;SCON.3 - TRANSMIT BIT 8
+0000             62   REN    BIT   09CH  ;SCON.4 - RECEIVE ENABLE
+0000             63   SM2    BIT   09DH  ;SCON.5 - SERIAL MODE CONTROL BIT 2
+0000             64   SM1    BIT   09EH  ;SCON.6 - SERIAL MODE CONTROL BIT 1
+0000             65   SM0    BIT   09FH  ;SCON.7 - SERIAL MODE CONTROL BIT 0
+0000             66   EX0    BIT   0A8H  ;IE.0 - EXTERNAL INTERRUPT 0 ENABLE
+0000             67   ET0    BIT   0A9H  ;IE.1 - TIMER 0 INTERRUPT ENABLE
+0000             68   EX1    BIT   0AAH  ;IE.2 - EXTERNAL INTERRUPT 1 ENABLE
+0000             69   ET1    BIT   0ABH  ;IE.3 - TIMER 1 INTERRUPT ENABLE
+0000             70   ES     BIT   0ACH  ;IE.4 - SERIAL PORT INTERRUPT ENABLE
+0000             71   ET2    BIT   0ADH  ;IE.5 - TIMER 2 INTERRUPT ENABLE
+0000             72   EA     BIT   0AFH  ;IE.7 - GLOBAL INTERRUPT ENABLE
+0000             73   RXD    BIT   0B0H  ;P3.0 - SERIAL PORT RECEIVE INPUT
+0000             74   TXD    BIT   0B1H  ;P3.1 - SERIAL PORT TRANSMIT OUTPUT
+0000             75   INT0   BIT   0B2H  ;P3.2 - EXTERNAL INTERRUPT 0 INPUT
+0000             76   INT1   BIT   0B3H  ;P3.3 - EXTERNAL INTERRUPT 1 INPUT
+0000             77   T0     BIT   0B4H  ;P3.4 - TIMER 0 COUNT INPUT
+0000             78   T1     BIT   0B5H  ;P3.5 - TIMER 1 COUNT INPUT
+0000             79   WR     BIT   0B6H  ;P3.6 - WRITE CONTROL FOR EXT. MEMORY
+0000             80   RD     BIT   0B7H  ;P3.7 - READ CONTROL FOR EXT. MEMORY
+0000             81   PX0    BIT   0B8H  ;IP.0 - EXTERNAL INTERRUPT 0 PRIORITY
+0000             82   PT0    BIT   0B9H  ;IP.1 - TIMER 0 PRIORITY
+0000             83   PX1    BIT   0BAH  ;IP.2 - EXTERNAL INTERRUPT 1 PRIORITY
+0000             84   PT1    BIT   0BBH  ;IP.3 - TIMER 1 PRIORITY
+0000             85   PS     BIT   0BCH  ;IP.4 - SERIAL PORT PRIORITY
+0000             86   PT2    BIT   0BDH  ;IP.5 - TIMER 2 PRIORITY
+0000             87   CAP2   BIT   0C8H  ;T2CON.0 - CAPTURE OR RELOAD SELECT
+0000             88   CNT2   BIT   0C9H  ;T2CON.1 - TIMER OR COUNTER SELECT
+0000             89   TR2    BIT   0CAH  ;T2CON.2 - TIMER 2 ON/OFF CONTROL
+0000             90   EXEN2  BIT   0CBH  ;T2CON.3 - TIMER 2 EXTERNAL ENABLE FLAG
+0000             91   TCLK   BIT   0CCH  ;T2CON.4 - TRANSMIT CLOCK SELECT
+0000             92   RCLK   BIT   0CDH  ;T2CON.5 - RECEIVE CLOCK SELECTT
+0000             93   EXF2   BIT   0CEH  ;T2CON.6 - EXTERNAL TRANSITION FLAG
+0000             94   TF2    BIT   0CFH  ;T2CON.7 - TIMER 2 OVERFLOW FLAG
+0000             95   P      BIT   0D0H  ;PSW.0 - ACCUMULATOR PARITY FLAG
+0000             96   OV     BIT   0D2H  ;PSW.2 - OVERFLOW FLAG
+0000             97   RS0    BIT   0D3H  ;PSW.3 - REGISTER BANK SELECT 0
+0000             98   RS1    BIT   0D4H  ;PSW.4 - REGISTER BANK SELECT 1
+0000             99   F0     BIT   0D5H  ;PSW.5 - FLAG 0
+0000            100   AC     BIT   0D6H  ;PSW.6 - AUXILIARY CARRY FLAG
+0000            101   CY     BIT   0D7H  ;PSW.7 - CARRY FLAG
+0000            102   
+0000            103   ; For the altera DE2 configured with an 8051/8052 softcore processor
+0000            104   ; we have the following extra registers:
+0000            105   
+0000            106   HEX0   DATA  091H ; Zero turns the segment on
+0000            107   HEX1   DATA  092H ; 
+0000            108   HEX2   DATA  093H ; 
+0000            109   HEX3   DATA  094H ; 
+0000            110   HEX4   DATA  08EH ;
+0000            111   HEX5   DATA  08FH ;
+0000            112   HEX6   DATA  096H ;
+0000            113   HEX7   DATA  097H ;
+0000            114   
+0000            115   P0MOD  DATA  09AH ; Input/output mode bits for port 0.  '1' sets the port to output mode.
+0000            116   P1MOD  DATA  09BH ; Input/output mode bits for port 1
+0000            117   P2MOD  DATA  09CH ; Input/output mode bits for port 2
+0000            118   P3MOD  DATA  09DH ; Input/output mode bits for port 3
+0000            119   
+0000            120   LEDRA  DATA  0E8H ; LEDs LEDR0 to LEDR7 (bit addressable, ex: LEDRA.1 for LEDR1)
+0000            121   LEDRB  DATA  095H ; LEDs LEDR8 to LEDR15
+0000            122   LEDRC  DATA  09EH ; LEDs LEDR16, LEDR15, and LEDG8
+0000            123   LEDG   DATA  0F8H ; LEDs LEDG0 to LEDG7 (bit addressable, ex: LEDG.3 for LEDG3)
+0000            124   SWA    DATA  0E8H ; Switches SW0 to SW7 (bit addressable, ex: SWA.1 for SW1)
+0000            125   SWB    DATA  095H ; Switches SW8 to SW15
+0000            126   SWC    DATA  09EH ; Switches SW16 and SW17
+0000            127   KEY    DATA  0F8H ; KEY1=KEY.1, KEY2=KEY.2, KEY3=KEY.3.  KEY0 is the reset button! 
+0000            128   
+0000            129   LCD_CMD   DATA 0D8H ;
+0000            130   LCD_DATA  DATA 0D9H ;
+0000            131   LCD_MOD   DATA 0DAH ; Write 0xff to make LCD_DATA an output
+0000            132   LCD_RW    BIT  0D8H ; '0' writes to LCD
+0000            133   LCD_EN    BIT  0D9H ; Toggle from '1' to '0'
+0000            134   LCD_RS    BIT  0DAH ; '0' for commands, '1' for data
+0000            135   LCD_ON    BIT  0DBH ; Write '1' to power the LCD
+0000            136   LCD_BLON  BIT  0DCH ; Write '1' to turn on back light
+0000            137   
+0000            138   FLASH_CMD  data 0DBH ; The control bits of the flash memory:
+0000            139   ; bit 0: FL_RST_N  Set to 1 for normal operation
+0000            140   ; bit 1: FL_WE_N
+0000            141   ; bit 2: FL_OE_N
+0000            142   ; bit 3: FL_CE_N
+0000            143   FLASH_DATA data 0DCH ; 8-bit data bus of flash memory.
+0000            144   FLASH_MOD  data 0DDH ; 0xff makes FLASH_DATA output.  0x00 makes FLASH_DATA input.
+0000            145   FLASH_ADD0 data 0E1H ; address bits 0 to 7.
+0000            146   FLASH_ADD1 data 0E2H ; address bits 8 to 15.
+0000            147   FLASH_ADD2 data 0E3H ; address bits 16 to 21.
+0000            148   
+0000              4   
+0000              5   org 0000H ; After reset, the processor starts at location zero
+0000 020003       6            ljmp myprogram
+0003              7            
+0003              8   ; For a 33.33 MHz clock takes 30ns
+0003              9   
+0003             10   NUMBER_0 EQU #0xC0
+0003             11   NUMBER_1 EQU #0xF9
+0003             12   NUMBER_2 EQU #0xA4
+0003             13   NUMBER_3 EQU #0xB0
+0003             14   NUMBER_4 EQU #0x99
+0003             15   NUMBER_5 EQU #0x92
+0003             16   NUMBER_6 EQU #0x82
+0003             17   NUMBER_7 EQU #0xF8
+0003             18   NUMBER_8 EQU #0x80
+0003             19   NUMBER_9 EQU #0x90
+0003             20   LETTER_H EQU #0x09
+0003             21   LETTER_E EQU #0x06
+0003             22   LETTER_L EQU #0x47
+0003             23   LETTER_O EQU #0x40
+0003             24   LETTER_C EQU #0x46
+0003             25   LETTER_P EQU #0x0C
+0003             26   LETTER_N EQU #0x48
+0003             27   
+0003             28   BLANK    EQU #0xff
+0003             29   
+0003             30   myprogram:
+0003 75817F      31            mov SP, #7FH
+0006 75E800      32            mov LEDRA,#0 ; clear LEDRA register
+0009 759500      33            mov LEDRB,#0 ; clear LEDRB register
+000C             34            
+000C 7591F8      35            mov HEX0, NUMBER_7
+000F 759292      36            mov HEX1, NUMBER_5
+0012 7593B0      37            mov HEX2, NUMBER_3
+0015 7594B0      38            mov HEX3, NUMBER_3
+0018 758E80      39            mov HEX4, NUMBER_8
+001B 758FF8      40            mov HEX5, NUMBER_7
+001E             41            
+001E 7F00        42            mov R7, #0 ;sw2
+0020 7E00        43            mov R6, #0 ;sw1
+0022 7D00        44            mov R5, #0 ;sw0
+0024 7C00        45            mov R4, #0 ;sw3 These are going to be registers where we save the current state
+0026             46            
+0026 020067      47            ljmp change_state
+0029             48   
+0029             49   compare_to_current_SW2_high:
+0029             50            
+0029 BF013B      51            cjne R7, #1, change_state 
+002C             52            
+002C 20E90C      53            jb SWA.1, compare_to_current_SW1_high
+002F 30E912      54            jnb SWA.1, compare_to_current_SW1_low
+0032             55            
+0032             56   compare_to_current_SW2_low:
+0032             57            
+0032 BF0032      58            cjne R7, #0, change_state
+0035             59            
+0035 20E903      60            jb SWA.1, compare_to_current_SW1_high
+0038 30E909      61            jnb SWA.1, compare_to_current_SW1_low
+003B             62            
+003B             63   compare_to_current_SW1_high:
+003B             64            
+003B BE0129      65            cjne R6, #1, change_state 
+003E             66            
+003E 20E80C      67            jb SWA.0, compare_to_current_SW0_high
+0041 30E812      68            jnb SWA.0, compare_to_current_SW0_low
+0044             69            
+0044             70   compare_to_current_SW1_low:
+0044             71            
+0044 BE0020      72            cjne R6, #0, change_state
+0047             73            
+0047 20E803      74            jb SWA.0, compare_to_current_SW0_high
+004A 30E809      75            jnb SWA.0, compare_to_current_SW0_low
+004D             76            
+004D             77            
+004D             78   compare_to_current_SW0_high:
+004D             79            
+004D BD0117      80            cjne R5, #1, change_state ; 
+0050             81            
+0050 20EB0C      82            jb SWA.3, compare_to_current_SW3_high
+0053 30EB0D      83            jnb SWA.3, compare_to_current_SW3_low
+0056             84            
+0056             85   compare_to_current_SW0_low:
+0056             86            
+0056 BD000E      87            cjne R5, #0, change_state
+0059             88            
+0059 20EB03      89            jb SWA.3, compare_to_current_SW3_high
+005C 30EB04      90            jnb SWA.3, compare_to_current_SW3_low
+005F             91            
+005F             92   compare_to_current_SW3_high:
+005F BC0105      93            cjne R4, #1, change_state
+0062             94            
+0062 22          95            ret ; return to the most recent lcall
+0063             96            
+0063             97   compare_to_current_SW3_low:
+0063 BC0001      98            cjne R4, #0, change_state
+0066             99            
+0066 22         100            ret ; return to the most recent lcall
+0067            101   
+0067            102   
+0067            103            
+0067            104   change_state:
+0067            105            
+0067 20EA0F     106            jb SWA.2, Check_SW1_given_SW2_HIGH
+006A 20E909     107            jb SWA.1, Long_jump_Check_SW0_given_SW2_LOW_SW1_HIGH    
+006D 20E803     108            jb SWA.0, Long_jump_Display_two_lsb
+0070            109            
+0070            110            ; do 000:
+0070 0200B9     111            ljmp Display_six_msb
+0073            112   
+0073            113   Long_jump_Display_two_lsb:
+0073 0200F8     114            ljmp Display_two_lsb
+0076            115   
+0076            116   Long_jump_Check_SW0_given_SW2_LOW_SW1_HIGH: ; use long jumps to avoid relative reference error
+0076            117   
+0076 020118     118            ljmp Check_SW0_given_SW2_LOW_SW1_HIGH
+0079            119            
+0079            120   Check_SW1_given_SW2_HIGH:
+0079            121   
+0079 20E90F     122            jb SWA.1, Check_SW0_given_SW2_SW1_HIGH
+007C            123            
+007C 20E803     124            jb SWA.0, Check_SW3_101
+007F            125            
+007F            126            ; do case 100
+007F 0200A3     127            ljmp Check_SW3_100
+0082            128            
+0082            129   Check_SW3_101:
+0082 20EB03     130            jb      SWA.3, Long_jump_do_101_half_sec
+0085            131            
+0085 020585     132            ljmp do_101_one_sec
+0088            133            
+0088            134   Long_jump_do_101_half_sec:
+0088 0204D2     135            ljmp do_101_half_sec
+008B            136   
+008B            137   Check_SW0_given_SW2_SW1_HIGH:
+008B            138            ; do 111
+008B 20E803     139            jb SWA.0, Check_SW3_111
+008E            140            
+008E 02009A     141            ljmp Check_SW3_110
+0091            142   
+0091            143   Check_SW3_111:
+0091 20EB03     144            jb      SWA.3, Long_jump_do_111_half_sec
+0094            145            
+0094 020719     146            ljmp do_111_one_sec
+0097            147            
+0097            148   Long_jump_do_111_half_sec:
+0097 0206DE     149            ljmp do_111_half_sec
+009A            150            
+009A            151   Check_SW3_110:
+009A 20EB03     152            jb      SWA.3, Long_jmp_do_110_half_sec
+009D            153            
+009D 02068B     154            ljmp do_110_one_sec
+00A0            155            
+00A0            156   Long_jmp_do_110_half_sec:
+00A0 020638     157            ljmp do_110_half_sec
+00A3            158            
+00A3            159   Check_SW3_100:
+00A3 20EB03     160            jb SWA.3, Long_jump_Blink_six_lsb_half_sec
+00A6            161            
+00A6 020497     162            ljmp Blink_six_lsb_one_sec
+00A9            163            
+00A9            164   Long_jump_Blink_six_lsb_half_sec:
+00A9 02045C     165            ljmp Blink_six_lsb_half_sec
+00AC            166            
+00AC            167   WaitOneSec:
+00AC 7AB4       168            mov R2, #180
+00AE 79FA       169   L6: mov R1, #250
+00B0 78FA       170   L5: mov R0, #250
+00B2 D8FE       171   L4: djnz R0, L4 ; 3 machine cycles -> 3*30ns*250 = 22.5 us
+00B4 D9FA       172            djnz R1, L5 ; 22.5 us * 250 = 5.625 ms
+00B6 DAF6       173            djnz R2, L6 ; 5.625 ms * 180 = 1 s (approximately)
+00B8 22         174            ret     
+00B9            175   
+00B9            176   
+00B9            177   
+00B9            178   Display_six_msb:
+00B9            179            
+00B9            180            
+00B9 7F00       181            mov R7, #0
+00BB 7E00       182            mov R6, #0
+00BD 7D00       183            mov R5, #0
+00BF 7C00       184            mov R4, #0 ; setting the current state
+00C1            185            
+00C1 7591F8     186            mov HEX0, NUMBER_7
+00C4 759292     187            mov HEX1, NUMBER_5
+00C7 7593B0     188            mov HEX2, NUMBER_3
+00CA 7594B0     189            mov HEX3, NUMBER_3
+00CD 758E80     190            mov HEX4, NUMBER_8
+00D0 758FF8     191            mov HEX5, NUMBER_7
+00D3            192            
+00D3 1200D9     193            lcall check_state ; we check states and if there is no change, we come back but if there is we change state
+00D6 0200B9     194            ljmp Display_six_msb ; looping through this state as long as the current state is the same as switches
+00D9            195   
+00D9            196   check_state:
+00D9 20FB06     197            jb KEY.3, break_check_state ; we check if key3 is pressed or not, if it is not pressed (one) we do not check state
+00DC            198            ;ljmp break_check_state
+00DC            199            ; compare the current set state of the switch to the state we are in:
+00DC 20EA06     200            jb SWA.2, Long_jump_compare_to_current_SW2_high
+00DF 30EA06     201            jnb SWA.2, Long_jump_compare_to_current_SW2_low
+00E2            202            
+00E2            203            ; no need for ret here because either jb or jnb will cause a jump
+00E2            204   
+00E2            205   break_check_state:
+00E2 B2E8       206            cpl LEDRA.0
+00E4 22         207            ret 
+00E5            208            
+00E5            209   Long_jump_compare_to_current_SW2_high: ; to avoid reference error
+00E5 020029     210            ljmp compare_to_current_SW2_high
+00E8            211   
+00E8            212   Long_jump_compare_to_current_SW2_low: ; to avoid reference error
+00E8 020032     213            ljmp compare_to_current_SW2_low
+00EB            214            
+00EB            215   WaitHalfSec:
+00EB 7A5A       216            mov R2, #90
+00ED 79FA       217   L3: mov R1, #250
+00EF 78FA       218   L2: mov R0, #250
+00F1 D8FE       219   L1: djnz R0, L1 ; 3 machine cycles -> 3*30ns*250 = 22.5 us
+00F3 D9FA       220            djnz R1, L2 ; 22.5 us * 250 = 5.625 ms
+00F5 DAF6       221            djnz R2, L3 ; 5.625 ms * 90 = 0.5 s (approximately)
+00F7            222   
+00F7 22         223            ret
+00F8            224   
+00F8            225   Display_two_lsb:
+00F8            226            
+00F8            227            
+00F8 7F00       228            mov R7, #0
+00FA 7E00       229            mov R6, #0
+00FC 7D01       230            mov R5, #1
+00FE 7C00       231            mov R4, #0
+0100            232            
+0100 7591F9     233            mov HEX0, NUMBER_1
+0103 759290     234            mov HEX1, NUMBER_9
+0106 7593FF     235            mov HEX2, BLANK
+0109 7594FF     236            mov HEX3, BLANK
+010C 758EFF     237            mov HEX4, BLANK
+010F 758FFF     238            mov HEX5, BLANK
+0112            239            
+0112 1200D9     240            lcall check_state       
+0115 0200F8     241            ljmp Display_two_lsb ; loop back
+0118            242            
+0118            243   Check_SW0_given_SW2_LOW_SW1_HIGH:
+0118            244            
+0118            245            ; do 011        
+0118 20E80C     246            jb SWA.0, Check_SW3_011
+011B            247            
+011B            248            ; do 010:
+011B 02011E     249            ljmp Check_SW3_010
+011E            250   
+011E            251   Check_SW3_010:
+011E 20EB03     252            jb SWA.3, Long_jump_Left_scroll_half_sec
+0121            253            
+0121 0202C6     254            ljmp Left_scroll_one_sec
+0124            255            
+0124            256   Long_jump_Left_scroll_half_sec:
+0124 020391     257            ljmp Left_scroll_half_sec
+0127            258            
+0127            259   Check_SW3_011:
+0127 20EB03     260            jb SWA.3, Long_jump_Right_scroll_half_sec ; since the jump is too far, we first move to another label to make a long jump
+012A            261            
+012A 020130     262            ljmp Right_scroll_one_sec
+012D            263            
+012D            264   Long_jump_Right_scroll_half_sec:
+012D            265            ; long jump to right_scroll_half_sec
+012D 0201FB     266            ljmp Right_scroll_half_sec
+0130            267            
+0130            268   Right_scroll_one_sec:
+0130 7F00       269            mov R7, #0
+0132 7E01       270            mov R6, #1
+0134 7D01       271            mov R5, #1
+0136 7C00       272            mov R4, #0 ; set current state
+0138            273   
+0138 7591F8     274            mov HEX0, NUMBER_7
+013B 759292     275            mov HEX1, NUMBER_5
+013E 7593B0     276            mov HEX2, NUMBER_3
+0141 7594B0     277            mov HEX3, NUMBER_3
+0144 758E80     278            mov HEX4, NUMBER_8
+0147 758FF8     279            mov HEX5, NUMBER_7
+014A            280            
+014A 1200D9     281            lcall check_state
+014D 1200AC     282            lcall WaitOneSec
+0150            283            
+0150 759192     284            mov HEX0, NUMBER_5
+0153 7592B0     285            mov HEX1, NUMBER_3
+0156 7593B0     286            mov HEX2, NUMBER_3
+0159 759480     287            mov HEX3, NUMBER_8
+015C 758EF8     288            mov HEX4, NUMBER_7
+015F 758FF9     289            mov HEX5, NUMBER_1
+0162            290            
+0162 1200D9     291            lcall check_state
+0165 1200AC     292            lcall WaitOneSec
+0168            293            
+0168 7591B0     294            mov HEX0, NUMBER_3
+016B 7592B0     295            mov HEX1, NUMBER_3
+016E 759380     296            mov HEX2, NUMBER_8
+0171 7594F8     297            mov HEX3, NUMBER_7
+0174 758EF9     298            mov HEX4, NUMBER_1
+0177 758F90     299            mov HEX5, NUMBER_9
+017A            300            
+017A 1200D9     301            lcall check_state
+017D 1200AC     302            lcall WaitOneSec
+0180            303            
+0180 7591B0     304            mov HEX0, NUMBER_3
+0183 759280     305            mov HEX1, NUMBER_8
+0186 7593F8     306            mov HEX2, NUMBER_7
+0189 7594F9     307            mov HEX3, NUMBER_1
+018C 758E90     308            mov HEX4, NUMBER_9
+018F 758FF8     309            mov HEX5, NUMBER_7
+0192            310            
+0192 1200D9     311            lcall check_state
+0195 1200AC     312            lcall WaitOneSec
+0198            313            
+0198 759180     314            mov HEX0, NUMBER_8
+019B 7592F8     315            mov HEX1, NUMBER_7
+019E 7593F9     316            mov HEX2, NUMBER_1
+01A1 759490     317            mov HEX3, NUMBER_9
+01A4 758EF8     318            mov HEX4, NUMBER_7
+01A7 758F92     319            mov HEX5, NUMBER_5
+01AA            320            
+01AA 1200D9     321            lcall check_state
+01AD 1200AC     322            lcall WaitOneSec
+01B0            323            
+01B0 7591F8     324            mov HEX0, NUMBER_7
+01B3 7592F9     325            mov HEX1, NUMBER_1
+01B6 759390     326            mov HEX2, NUMBER_9
+01B9 7594F8     327            mov HEX3, NUMBER_7
+01BC 758E92     328            mov HEX4, NUMBER_5
+01BF 758FB0     329            mov HEX5, NUMBER_3
+01C2            330            
+01C2 1200D9     331            lcall check_state
+01C5 1200AC     332            lcall WaitOneSec
+01C8            333            
+01C8 7591F9     334            mov HEX0, NUMBER_1
+01CB 759290     335            mov HEX1, NUMBER_9
+01CE 7593F8     336            mov HEX2, NUMBER_7
+01D1 759492     337            mov HEX3, NUMBER_5
+01D4 758EB0     338            mov HEX4, NUMBER_3
+01D7 758FB0     339            mov HEX5, NUMBER_3
+01DA            340            
+01DA 1200D9     341            lcall check_state
+01DD 1200AC     342            lcall WaitOneSec 
+01E0            343            
+01E0 759190     344            mov HEX0, NUMBER_9
+01E3 7592F8     345            mov HEX1, NUMBER_7
+01E6 759392     346            mov HEX2, NUMBER_5
+01E9 7594B0     347            mov HEX3, NUMBER_3
+01EC 758EB0     348            mov HEX4, NUMBER_3
+01EF 758F80     349            mov HEX5, NUMBER_8
+01F2            350            
+01F2 1200D9     351            lcall check_state
+01F5 1200AC     352            lcall WaitOneSec
+01F8            353            
+01F8 020130     354            ljmp Right_scroll_one_sec
+01FB            355   
+01FB            356   Right_scroll_half_sec:
+01FB 7F00       357            mov R7, #0
+01FD 7E01       358            mov R6, #1
+01FF 7D01       359            mov R5, #1
+0201 7C01       360            mov R4, #1
+0203            361   
+0203 7591F8     362            mov HEX0, NUMBER_7
+0206 759292     363            mov HEX1, NUMBER_5
+0209 7593B0     364            mov HEX2, NUMBER_3
+020C 7594B0     365            mov HEX3, NUMBER_3
+020F 758E80     366            mov HEX4, NUMBER_8
+0212 758FF8     367            mov HEX5, NUMBER_7
+0215            368            
+0215 1200D9     369            lcall check_state
+0218 1200EB     370            lcall WaitHalfSec
+021B            371            
+021B 759192     372            mov HEX0, NUMBER_5
+021E 7592B0     373            mov HEX1, NUMBER_3
+0221 7593B0     374            mov HEX2, NUMBER_3
+0224 759480     375            mov HEX3, NUMBER_8
+0227 758EF8     376            mov HEX4, NUMBER_7
+022A 758FF9     377            mov HEX5, NUMBER_1
+022D            378            
+022D 1200D9     379            lcall check_state
+0230 1200EB     380            lcall WaitHalfSec
+0233            381            
+0233 7591B0     382            mov HEX0, NUMBER_3
+0236 7592B0     383            mov HEX1, NUMBER_3
+0239 759380     384            mov HEX2, NUMBER_8
+023C 7594F8     385            mov HEX3, NUMBER_7
+023F 758EF9     386            mov HEX4, NUMBER_1
+0242 758F90     387            mov HEX5, NUMBER_9
+0245            388            
+0245 1200D9     389            lcall check_state
+0248 1200EB     390            lcall WaitHalfSec
+024B            391            
+024B 7591B0     392            mov HEX0, NUMBER_3
+024E 759280     393            mov HEX1, NUMBER_8
+0251 7593F8     394            mov HEX2, NUMBER_7
+0254 7594F9     395            mov HEX3, NUMBER_1
+0257 758E90     396            mov HEX4, NUMBER_9
+025A 758FF8     397            mov HEX5, NUMBER_7
+025D            398            
+025D 1200D9     399            lcall check_state
+0260 1200EB     400            lcall WaitHalfSec
+0263            401            
+0263 759180     402            mov HEX0, NUMBER_8
+0266 7592F8     403            mov HEX1, NUMBER_7
+0269 7593F9     404            mov HEX2, NUMBER_1
+026C 759490     405            mov HEX3, NUMBER_9
+026F 758EF8     406            mov HEX4, NUMBER_7
+0272 758F92     407            mov HEX5, NUMBER_5
+0275            408            
+0275 1200D9     409            lcall check_state
+0278 1200EB     410            lcall WaitHalfSec
+027B            411            
+027B 7591F8     412            mov HEX0, NUMBER_7
+027E 7592F9     413            mov HEX1, NUMBER_1
+0281 759390     414            mov HEX2, NUMBER_9
+0284 7594F8     415            mov HEX3, NUMBER_7
+0287 758E92     416            mov HEX4, NUMBER_5
+028A 758FB0     417            mov HEX5, NUMBER_3
+028D            418            
+028D 1200D9     419            lcall check_state
+0290 1200EB     420            lcall WaitHalfSec
+0293            421            
+0293 7591F9     422            mov HEX0, NUMBER_1
+0296 759290     423            mov HEX1, NUMBER_9
+0299 7593F8     424            mov HEX2, NUMBER_7
+029C 759492     425            mov HEX3, NUMBER_5
+029F 758EB0     426            mov HEX4, NUMBER_3
+02A2 758FB0     427            mov HEX5, NUMBER_3
+02A5            428            
+02A5 1200D9     429            lcall check_state
+02A8 1200EB     430            lcall WaitHalfSec 
+02AB            431            
+02AB 759190     432            mov HEX0, NUMBER_9
+02AE 7592F8     433            mov HEX1, NUMBER_7
+02B1 759392     434            mov HEX2, NUMBER_5
+02B4 7594B0     435            mov HEX3, NUMBER_3
+02B7 758EB0     436            mov HEX4, NUMBER_3
+02BA 758F80     437            mov HEX5, NUMBER_8
+02BD            438            
+02BD 1200D9     439            lcall check_state
+02C0 1200EB     440            lcall WaitHalfSec
+02C3            441            
+02C3 020130     442            ljmp Right_scroll_one_sec
+02C6            443            
+02C6            444   Left_scroll_one_sec:
+02C6            445   
+02C6 7F00       446            mov R7, #0
+02C8 7E01       447            mov R6, #1
+02CA 7D00       448            mov R5, #0
+02CC 7C00       449            mov R4, #0
+02CE            450   
+02CE 7591F8     451            mov HEX0, NUMBER_7
+02D1 759292     452            mov HEX1, NUMBER_5
+02D4 7593B0     453            mov HEX2, NUMBER_3
+02D7 7594B0     454            mov HEX3, NUMBER_3
+02DA 758E80     455            mov HEX4, NUMBER_8
+02DD 758FF8     456            mov HEX5, NUMBER_7
+02E0            457            
+02E0 1200D9     458            lcall check_state
+02E3 1200AC     459            lcall WaitOneSec
+02E6            460            
+02E6 759190     461            mov HEX0, NUMBER_9
+02E9 7592F8     462            mov HEX1, NUMBER_7
+02EC 759392     463            mov HEX2, NUMBER_5
+02EF 7594B0     464            mov HEX3, NUMBER_3
+02F2 758EB0     465            mov HEX4, NUMBER_3
+02F5 758F80     466            mov HEX5, NUMBER_8
+02F8            467            
+02F8 1200D9     468            lcall check_state
+02FB 1200AC     469            lcall WaitOneSec
+02FE            470            
+02FE 7591F9     471            mov HEX0, NUMBER_1
+0301 759290     472            mov HEX1, NUMBER_9
+0304 7593F8     473            mov HEX2, NUMBER_7
+0307 759492     474            mov HEX3, NUMBER_5
+030A 758EB0     475            mov HEX4, NUMBER_3
+030D 758FB0     476            mov HEX5, NUMBER_3
+0310            477            
+0310 1200D9     478            lcall check_state
+0313 1200AC     479            lcall WaitOneSec 
+0316            480            
+0316 7591F8     481            mov HEX0, NUMBER_7
+0319 7592F9     482            mov HEX1, NUMBER_1
+031C 759390     483            mov HEX2, NUMBER_9
+031F 7594F8     484            mov HEX3, NUMBER_7
+0322 758E92     485            mov HEX4, NUMBER_5
+0325 758FB0     486            mov HEX5, NUMBER_3
+0328            487            
+0328 1200D9     488            lcall check_state
+032B 1200AC     489            lcall WaitOneSec
+032E            490            
+032E 759180     491            mov HEX0, NUMBER_8
+0331 7592F8     492            mov HEX1, NUMBER_7
+0334 7593F9     493            mov HEX2, NUMBER_1
+0337 759490     494            mov HEX3, NUMBER_9
+033A 758EF8     495            mov HEX4, NUMBER_7
+033D 758F92     496            mov HEX5, NUMBER_5
+0340            497            
+0340 1200D9     498            lcall check_state
+0343 1200AC     499            lcall WaitOneSec
+0346            500            
+0346 7591B0     501            mov HEX0, NUMBER_3
+0349 759280     502            mov HEX1, NUMBER_8
+034C 7593F8     503            mov HEX2, NUMBER_7
+034F 7594F9     504            mov HEX3, NUMBER_1
+0352 758E90     505            mov HEX4, NUMBER_9
+0355 758FF8     506            mov HEX5, NUMBER_7
+0358            507            
+0358 1200D9     508            lcall check_state
+035B 1200AC     509            lcall WaitOneSec
+035E            510            
+035E 7591B0     511            mov HEX0, NUMBER_3
+0361 7592B0     512            mov HEX1, NUMBER_3
+0364 759380     513            mov HEX2, NUMBER_8
+0367 7594F8     514            mov HEX3, NUMBER_7
+036A 758EF9     515            mov HEX4, NUMBER_1
+036D 758F90     516            mov HEX5, NUMBER_9
+0370            517            
+0370 1200D9     518            lcall check_state
+0373 1200AC     519            lcall WaitOneSec
+0376            520                    
+0376 759192     521            mov HEX0, NUMBER_5
+0379 7592B0     522            mov HEX1, NUMBER_3
+037C 7593B0     523            mov HEX2, NUMBER_3
+037F 759480     524            mov HEX3, NUMBER_8
+0382 758EF8     525            mov HEX4, NUMBER_7
+0385 758FF9     526            mov HEX5, NUMBER_1
+0388            527            
+0388 1200D9     528            lcall check_state
+038B 1200AC     529            lcall WaitOneSec 
+038E            530            
+038E 0202C6     531            ljmp Left_scroll_one_sec
+0391            532                    
+0391            533   
+0391            534   Left_scroll_half_sec:
+0391            535   
+0391 7F00       536            mov R7, #0
+0393 7E01       537            mov R6, #1
+0395 7D00       538            mov R5, #0
+0397 7C01       539            mov R4, #1
+0399            540   
+0399 7591F8     541            mov HEX0, NUMBER_7
+039C 759292     542            mov HEX1, NUMBER_5
+039F 7593B0     543            mov HEX2, NUMBER_3
+03A2 7594B0     544            mov HEX3, NUMBER_3
+03A5 758E80     545            mov HEX4, NUMBER_8
+03A8 758FF8     546            mov HEX5, NUMBER_7
+03AB            547            
+03AB 1200D9     548            lcall check_state
+03AE 1200EB     549            lcall WaitHalfSec
+03B1            550            
+03B1 759190     551            mov HEX0, NUMBER_9
+03B4 7592F8     552            mov HEX1, NUMBER_7
+03B7 759392     553            mov HEX2, NUMBER_5
+03BA 7594B0     554            mov HEX3, NUMBER_3
+03BD 758EB0     555            mov HEX4, NUMBER_3
+03C0 758F80     556            mov HEX5, NUMBER_8
+03C3            557            
+03C3 1200D9     558            lcall check_state
+03C6 1200EB     559            lcall WaitHalfSec
+03C9            560            
+03C9 7591F9     561            mov HEX0, NUMBER_1
+03CC 759290     562            mov HEX1, NUMBER_9
+03CF 7593F8     563            mov HEX2, NUMBER_7
+03D2 759492     564            mov HEX3, NUMBER_5
+03D5 758EB0     565            mov HEX4, NUMBER_3
+03D8 758FB0     566            mov HEX5, NUMBER_3
+03DB            567            
+03DB 1200D9     568            lcall check_state
+03DE 1200EB     569            lcall WaitHalfSec 
+03E1            570            
+03E1 7591F8     571            mov HEX0, NUMBER_7
+03E4 7592F9     572            mov HEX1, NUMBER_1
+03E7 759390     573            mov HEX2, NUMBER_9
+03EA 7594F8     574            mov HEX3, NUMBER_7
+03ED 758E92     575            mov HEX4, NUMBER_5
+03F0 758FB0     576            mov HEX5, NUMBER_3
+03F3            577            
+03F3 1200D9     578            lcall check_state
+03F6 1200EB     579            lcall WaitHalfSec
+03F9            580            
+03F9 759180     581            mov HEX0, NUMBER_8
+03FC 7592F8     582            mov HEX1, NUMBER_7
+03FF 7593F9     583            mov HEX2, NUMBER_1
+0402 759490     584            mov HEX3, NUMBER_9
+0405 758EF8     585            mov HEX4, NUMBER_7
+0408 758F92     586            mov HEX5, NUMBER_5
+040B            587            
+040B 1200D9     588            lcall check_state
+040E 1200EB     589            lcall WaitHalfSec
+0411            590            
+0411 7591B0     591            mov HEX0, NUMBER_3
+0414 759280     592            mov HEX1, NUMBER_8
+0417 7593F8     593            mov HEX2, NUMBER_7
+041A 7594F9     594            mov HEX3, NUMBER_1
+041D 758E90     595            mov HEX4, NUMBER_9
+0420 758FF8     596            mov HEX5, NUMBER_7
+0423            597            
+0423 1200D9     598            lcall check_state
+0426 1200EB     599            lcall WaitHalfSec
+0429            600            
+0429 7591B0     601            mov HEX0, NUMBER_3
+042C 7592B0     602            mov HEX1, NUMBER_3
+042F 759380     603            mov HEX2, NUMBER_8
+0432 7594F8     604            mov HEX3, NUMBER_7
+0435 758EF9     605            mov HEX4, NUMBER_1
+0438 758F90     606            mov HEX5, NUMBER_9
+043B            607            
+043B 1200D9     608            lcall check_state
+043E 1200EB     609            lcall WaitHalfSec
+0441            610                    
+0441 759192     611            mov HEX0, NUMBER_5
+0444 7592B0     612            mov HEX1, NUMBER_3
+0447 7593B0     613            mov HEX2, NUMBER_3
+044A 759480     614            mov HEX3, NUMBER_8
+044D 758EF8     615            mov HEX4, NUMBER_7
+0450 758FF9     616            mov HEX5, NUMBER_1
+0453            617            
+0453 1200D9     618            lcall check_state
+0456 1200EB     619            lcall WaitHalfSec 
+0459            620            
+0459 020391     621            ljmp Left_scroll_half_sec
+045C            622            
+045C            623            
+045C            624   Blink_six_lsb_half_sec:
+045C            625            
+045C 7F01       626            mov R7, #1
+045E 7E00       627            mov R6, #0
+0460 7D00       628            mov R5, #0
+0462 7C01       629            mov R4, #1
+0464            630            
+0464 7591F9     631            mov HEX0, NUMBER_1
+0467 759290     632            mov HEX1, NUMBER_9
+046A 7593F8     633            mov HEX2, NUMBER_7
+046D 759492     634            mov HEX3, NUMBER_5
+0470 758EB0     635            mov HEX4, NUMBER_3
+0473 758FB0     636            mov HEX5, NUMBER_3
+0476            637            
+0476 1200D9     638            lcall check_state
+0479 1200EB     639            lcall WaitHalfSec
+047C            640            
+047C 7591FF     641            mov HEX0, BLANK
+047F 7592FF     642            mov HEX1, BLANK
+0482 7593FF     643            mov HEX2, BLANK
+0485 7594FF     644            mov HEX3, BLANK
+0488 758EFF     645            mov HEX4, BLANK
+048B 758FFF     646            mov HEX5, BLANK
+048E            647            
+048E 1200D9     648            lcall check_state
+0491 1200EB     649            lcall WaitHalfSec
+0494            650            
+0494 02045C     651            ljmp Blink_six_lsb_half_sec
+0497            652   
+0497            653   Blink_six_lsb_one_sec:
+0497            654            
+0497 7F01       655            mov R7, #1
+0499 7E00       656            mov R6, #0
+049B 7D00       657            mov R5, #0
+049D 7C00       658            mov R4, #0
+049F            659            
+049F 7591F9     660            mov HEX0, NUMBER_1
+04A2 759290     661            mov HEX1, NUMBER_9
+04A5 7593F8     662            mov HEX2, NUMBER_7
+04A8 759492     663            mov HEX3, NUMBER_5
+04AB 758EB0     664            mov HEX4, NUMBER_3
+04AE 758FB0     665            mov HEX5, NUMBER_3
+04B1            666            
+04B1 1200D9     667            lcall check_state
+04B4 1200AC     668            lcall WaitOneSec
+04B7            669            
+04B7 7591FF     670            mov HEX0, BLANK
+04BA 7592FF     671            mov HEX1, BLANK
+04BD 7593FF     672            mov HEX2, BLANK
+04C0 7594FF     673            mov HEX3, BLANK
+04C3 758EFF     674            mov HEX4, BLANK
+04C6 758FFF     675            mov HEX5, BLANK
+04C9            676            
+04C9 1200D9     677            lcall check_state
+04CC 1200AC     678            lcall WaitOneSec
+04CF            679            
+04CF 020497     680            ljmp Blink_six_lsb_one_sec
+04D2            681   
+04D2            682   do_101_half_sec:
+04D2            683            
+04D2 7F01       684            mov R7, #1
+04D4 7E00       685            mov R6, #0
+04D6 7D01       686            mov R5, #1
+04D8 7C01       687            mov R4, #1
+04DA            688            
+04DA 7591FF     689            mov HEX0, BLANK
+04DD 7592FF     690            mov HEX1, BLANK
+04E0 7593FF     691            mov HEX2, BLANK
+04E3 7594FF     692            mov HEX3, BLANK
+04E6 758EFF     693            mov HEX4, BLANK
+04E9 758FFF     694            mov HEX5, BLANK
+04EC            695            
+04EC 1200D9     696            lcall check_state
+04EF 1200EB     697            lcall WaitHalfSec
+04F2            698            
+04F2 7591FF     699            mov HEX0, BLANK
+04F5 7592FF     700            mov HEX1, BLANK
+04F8 7593FF     701            mov HEX2, BLANK
+04FB 7594FF     702            mov HEX3, BLANK
+04FE 758EFF     703            mov HEX4, BLANK
+0501 758FF8     704            mov HEX5, NUMBER_7
+0504            705            
+0504 1200D9     706            lcall check_state
+0507 1200EB     707            lcall WaitHalfSec
+050A            708            
+050A 7591FF     709            mov HEX0, BLANK
+050D 7592FF     710            mov HEX1, BLANK
+0510 7593FF     711            mov HEX2, BLANK
+0513 7594FF     712            mov HEX3, BLANK
+0516 758E80     713            mov HEX4, NUMBER_8
+0519 758FF8     714            mov HEX5, NUMBER_7
+051C            715            
+051C 1200D9     716            lcall check_state
+051F 1200EB     717            lcall WaitHalfSec
+0522            718            
+0522 7591FF     719            mov HEX0, BLANK
+0525 7592FF     720            mov HEX1, BLANK
+0528 7593FF     721            mov HEX2, BLANK
+052B 7594B0     722            mov HEX3, NUMBER_3
+052E 758E80     723            mov HEX4, NUMBER_8
+0531 758FF8     724            mov HEX5, NUMBER_7
+0534            725            
+0534 1200D9     726            lcall check_state
+0537 1200EB     727            lcall WaitHalfSec
+053A            728            
+053A 7591FF     729            mov HEX0, BLANK
+053D 7592FF     730            mov HEX1, BLANK
+0540 7593B0     731            mov HEX2, NUMBER_3
+0543 7594B0     732            mov HEX3, NUMBER_3
+0546 758E80     733            mov HEX4, NUMBER_8
+0549 758FF8     734            mov HEX5, NUMBER_7
+054C            735            
+054C 1200D9     736            lcall check_state
+054F 1200EB     737            lcall WaitHalfSec
+0552            738            
+0552 7591FF     739            mov HEX0, BLANK
+0555 759292     740            mov HEX1, NUMBER_5
+0558 7593B0     741            mov HEX2, NUMBER_3
+055B 7594B0     742            mov HEX3, NUMBER_3
+055E 758E80     743            mov HEX4, NUMBER_8
+0561 758FF8     744            mov HEX5, NUMBER_7
+0564            745            
+0564 1200D9     746            lcall check_state
+0567 1200EB     747            lcall WaitHalfSec
+056A            748            
+056A 7591F8     749            mov HEX0, NUMBER_7
+056D 759292     750            mov HEX1, NUMBER_5
+0570 7593B0     751            mov HEX2, NUMBER_3
+0573 7594B0     752            mov HEX3, NUMBER_3
+0576 758E80     753            mov HEX4, NUMBER_8
+0579 758FF8     754            mov HEX5, NUMBER_7
+057C            755            
+057C 1200D9     756            lcall check_state
+057F 1200EB     757            lcall WaitHalfSec
+0582            758            
+0582            759            
+0582 0204D2     760            ljmp do_101_half_sec
+0585            761            
+0585            762   
+0585            763   do_101_one_sec:
+0585            764            
+0585 7F01       765            mov R7, #1
+0587 7E00       766            mov R6, #0
+0589 7D01       767            mov R5, #1
+058B 7C00       768            mov R4, #0
+058D            769            
+058D 7591FF     770            mov HEX0, BLANK
+0590 7592FF     771            mov HEX1, BLANK
+0593 7593FF     772            mov HEX2, BLANK
+0596 7594FF     773            mov HEX3, BLANK
+0599 758EFF     774            mov HEX4, BLANK
+059C 758FFF     775            mov HEX5, BLANK
+059F            776            
+059F 1200D9     777            lcall check_state
+05A2 1200AC     778            lcall WaitOneSec
+05A5            779            
+05A5 7591FF     780            mov HEX0, BLANK
+05A8 7592FF     781            mov HEX1, BLANK
+05AB 7593FF     782            mov HEX2, BLANK
+05AE 7594FF     783            mov HEX3, BLANK
+05B1 758EFF     784            mov HEX4, BLANK
+05B4 758FF8     785            mov HEX5, NUMBER_7
+05B7            786            
+05B7 1200D9     787            lcall check_state
+05BA 1200AC     788            lcall WaitOneSec
+05BD            789            
+05BD 7591FF     790            mov HEX0, BLANK
+05C0 7592FF     791            mov HEX1, BLANK
+05C3 7593FF     792            mov HEX2, BLANK
+05C6 7594FF     793            mov HEX3, BLANK
+05C9 758E80     794            mov HEX4, NUMBER_8
+05CC 758FF8     795            mov HEX5, NUMBER_7
+05CF            796            
+05CF 1200D9     797            lcall check_state
+05D2 1200AC     798            lcall WaitOneSec
+05D5            799            
+05D5 7591FF     800            mov HEX0, BLANK
+05D8 7592FF     801            mov HEX1, BLANK
+05DB 7593FF     802            mov HEX2, BLANK
+05DE 7594B0     803            mov HEX3, NUMBER_3
+05E1 758E80     804            mov HEX4, NUMBER_8
+05E4 758FF8     805            mov HEX5, NUMBER_7
+05E7            806            
+05E7 1200D9     807            lcall check_state
+05EA 1200AC     808            lcall WaitOneSec
+05ED            809            
+05ED 7591FF     810            mov HEX0, BLANK
+05F0 7592FF     811            mov HEX1, BLANK
+05F3 7593B0     812            mov HEX2, NUMBER_3
+05F6 7594B0     813            mov HEX3, NUMBER_3
+05F9 758E80     814            mov HEX4, NUMBER_8
+05FC 758FF8     815            mov HEX5, NUMBER_7
+05FF            816            
+05FF 1200D9     817            lcall check_state
+0602 1200AC     818            lcall WaitOneSec
+0605            819            
+0605 7591FF     820            mov HEX0, BLANK
+0608 759292     821            mov HEX1, NUMBER_5
+060B 7593B0     822            mov HEX2, NUMBER_3
+060E 7594B0     823            mov HEX3, NUMBER_3
+0611 758E80     824            mov HEX4, NUMBER_8
+0614 758FF8     825            mov HEX5, NUMBER_7
+0617            826            
+0617 1200D9     827            lcall check_state
+061A 1200AC     828            lcall WaitOneSec
+061D            829            
+061D 7591F8     830            mov HEX0, NUMBER_7
+0620 759292     831            mov HEX1, NUMBER_5
+0623 7593B0     832            mov HEX2, NUMBER_3
+0626 7594B0     833            mov HEX3, NUMBER_3
+0629 758E80     834            mov HEX4, NUMBER_8
+062C 758FF8     835            mov HEX5, NUMBER_7
+062F            836            
+062F 1200D9     837            lcall check_state
+0632 1200AC     838            lcall WaitOneSec
+0635            839            
+0635            840            
+0635 020585     841            ljmp do_101_one_sec
+0638            842   
+0638            843   do_110_half_sec:
+0638            844   
+0638 7F01       845            mov R7, #1
+063A 7E01       846            mov R6, #1
+063C 7D00       847            mov R5, #0
+063E 7C01       848            mov R4, #1
+0640            849            
+0640 7591FF     850            mov HEX0, BLANK
+0643 759240     851            mov HEX1, LETTER_O
+0646 759347     852            mov HEX2, LETTER_L
+0649 759447     853            mov HEX3, LETTER_L
+064C 758E06     854            mov HEX4, LETTER_E
+064F 758F09     855            mov HEX5, LETTER_H
+0652            856            
+0652 1200D9     857            lcall check_state
+0655 1200EB     858            lcall WaitHalfSec 
+0658            859            
+0658 7591F8     860            mov HEX0, NUMBER_7
+065B 759292     861            mov HEX1, NUMBER_5
+065E 7593B0     862            mov HEX2, NUMBER_3
+0661 7594B0     863            mov HEX3, NUMBER_3
+0664 758E80     864            mov HEX4, NUMBER_8
+0667 758FF8     865            mov HEX5, NUMBER_7
+066A            866            
+066A 1200D9     867            lcall check_state
+066D 1200EB     868            lcall WaitHalfSec 
+0670            869   
+0670 7591A4     870            mov HEX0, NUMBER_2
+0673 7592F9     871            mov HEX1, NUMBER_1
+0676 7593B0     872            mov HEX2, NUMBER_3
+0679 759448     873            mov HEX3, LETTER_N
+067C 758E0C     874            mov HEX4, LETTER_P
+067F 758F46     875            mov HEX5, LETTER_C
+0682            876            
+0682 1200D9     877            lcall check_state
+0685 1200EB     878            lcall WaitHalfSec 
+0688            879            
+0688 020638     880            ljmp do_110_half_sec
+068B            881   
+068B            882   do_110_one_sec:
+068B            883   
+068B 7F01       884            mov R7, #1
+068D 7E01       885            mov R6, #1
+068F 7D00       886            mov R5, #0
+0691 7C00       887            mov R4, #0
+0693            888            
+0693 7591FF     889            mov HEX0, BLANK
+0696 759240     890            mov HEX1, LETTER_O
+0699 759347     891            mov HEX2, LETTER_L
+069C 759447     892            mov HEX3, LETTER_L
+069F 758E06     893            mov HEX4, LETTER_E
+06A2 758F09     894            mov HEX5, LETTER_H
+06A5            895            
+06A5 1200D9     896            lcall check_state
+06A8 1200AC     897            lcall WaitOneSec 
+06AB            898            
+06AB 7591F8     899            mov HEX0, NUMBER_7
+06AE 759292     900            mov HEX1, NUMBER_5
+06B1 7593B0     901            mov HEX2, NUMBER_3
+06B4 7594B0     902            mov HEX3, NUMBER_3
+06B7 758E80     903            mov HEX4, NUMBER_8
+06BA 758FF8     904            mov HEX5, NUMBER_7
+06BD            905            
+06BD 1200D9     906            lcall check_state
+06C0 1200AC     907            lcall WaitOneSec 
+06C3            908   
+06C3 7591A4     909            mov HEX0, NUMBER_2
+06C6 7592F9     910            mov HEX1, NUMBER_1
+06C9 7593B0     911            mov HEX2, NUMBER_3
+06CC 759448     912            mov HEX3, LETTER_N
+06CF 758E0C     913            mov HEX4, LETTER_P
+06D2 758F46     914            mov HEX5, LETTER_C
+06D5            915            
+06D5 1200D9     916            lcall check_state
+06D8 1200AC     917            lcall WaitOneSec 
+06DB            918            
+06DB 02068B     919            ljmp do_110_one_sec
+06DE            920   
+06DE            921   do_111_half_sec:
+06DE 7F01       922            mov R7, #1
+06E0 7E01       923            mov R6, #1
+06E2 7D01       924            mov R5, #1
+06E4 7C01       925            mov R4, #1
+06E6            926            
+06E6 7591FF     927            mov HEX0, BLANK
+06E9 759292     928            mov HEX1, NUMBER_5
+06EC 7593FF     929            mov HEX2, BLANK
+06EF 7594B0     930            mov HEX3, NUMBER_3
+06F2 758EFF     931            mov HEX4, BLANK
+06F5 758FF8     932            mov HEX5, NUMBER_7
+06F8            933            
+06F8 1200D9     934            lcall check_state
+06FB 1200EB     935            lcall WaitHalfSec
+06FE            936            
+06FE 7591F8     937            mov HEX0, NUMBER_7
+0701 7592FF     938            mov HEX1, BLANK
+0704 7593B0     939            mov HEX2, NUMBER_3
+0707 7594FF     940            mov HEX3, BLANK
+070A 758E80     941            mov HEX4, NUMBER_8
+070D 758FFF     942            mov HEX5, BLANK
+0710            943            
+0710 1200D9     944            lcall check_state
+0713 1200EB     945            lcall WaitHalfSec
+0716            946            
+0716 0206DE     947            ljmp do_111_half_sec
+0719            948            
+0719            949   do_111_one_sec:
+0719 7F01       950            mov R7, #1
+071B 7E01       951            mov R6, #1
+071D 7D01       952            mov R5, #1
+071F 7C00       953            mov R4, #0
+0721            954            
+0721 7591FF     955            mov HEX0, BLANK
+0724 759292     956            mov HEX1, NUMBER_5
+0727 7593FF     957            mov HEX2, BLANK
+072A 7594B0     958            mov HEX3, NUMBER_3
+072D 758EFF     959            mov HEX4, BLANK
+0730 758FF8     960            mov HEX5, NUMBER_7
+0733            961            
+0733 1200D9     962            lcall check_state
+0736 1200AC     963            lcall WaitOneSec
+0739            964            
+0739 7591F8     965            mov HEX0, NUMBER_7
+073C 7592FF     966            mov HEX1, BLANK
+073F 7593B0     967            mov HEX2, NUMBER_3
+0742 7594FF     968            mov HEX3, BLANK
+0745 758E80     969            mov HEX4, NUMBER_8
+0748 758FFF     970            mov HEX5, BLANK
+074B            971            
+074B 1200D9     972            lcall check_state
+074E 1200AC     973            lcall WaitOneSec
+0751            974            
+0751 020719     975            ljmp do_111_one_sec
+0754            976            
+0754            977            
+0754            978            
+0754            979   END

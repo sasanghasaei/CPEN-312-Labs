@@ -1,0 +1,12 @@
+|counters
+Clock => Q_3~reg0.CLK
+Clock => Q_2~reg0.CLK
+Clock => Q_1~reg0.CLK
+Clock => Q_0~reg0.CLK
+w => Q_3~reg0.DATAIN
+Q_0 << Q_0~reg0.DB_MAX_OUTPUT_PORT_TYPE
+Q_1 << Q_1~reg0.DB_MAX_OUTPUT_PORT_TYPE
+Q_2 << Q_2~reg0.DB_MAX_OUTPUT_PORT_TYPE
+Q_3 << Q_3~reg0.DB_MAX_OUTPUT_PORT_TYPE
+
+

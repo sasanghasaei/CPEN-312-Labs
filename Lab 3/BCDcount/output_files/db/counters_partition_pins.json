@@ -1,0 +1,33 @@
+{
+	"partitions" : [
+		{
+			"name" : "Top",
+			"pins" : [
+				{
+					"name" : "Q_0",
+					"strict" : false
+				},
+				{
+					"name" : "Q_1",
+					"strict" : false
+				},
+				{
+					"name" : "Q_2",
+					"strict" : false
+				},
+				{
+					"name" : "Q_3",
+					"strict" : false
+				},
+				{
+					"name" : "Clock",
+					"strict" : false
+				},
+				{
+					"name" : "w",
+					"strict" : false
+				}
+			]
+		}
+	]
+}

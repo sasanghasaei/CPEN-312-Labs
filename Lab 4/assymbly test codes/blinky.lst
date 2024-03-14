@@ -1,0 +1,535 @@
+0000              1   ; Blinky.asm: blinks LEDR0 of the CV-8052 each second.
+0000              2   
+                 -1   $MODDE0CV ; Special Function Registers declaration for CV-8052
+0000              1   ;  MODDDE2: Register definition for DE2-8052 softcore
+0000              2   ;
+0000              3   ;   Copyright (C) 2011  Jesus Calvino-Fraga, jesusc at ece.ubc.ca
+0000              4   ;
+0000              5   ;   This library is free software; you can redistribute it and/or
+0000              6   ;   modify it under the terms of the GNU Lesser General Public
+0000              7   ;   License as published by the Free Software Foundation; either
+0000              8   ;   version 2.1 of the License, or (at your option) any later version.
+0000              9   ;
+0000             10   ;   This library is distributed in the hope that it will be useful,
+0000             11   ;   but WITHOUT ANY WARRANTY; without even the implied warranty of
+0000             12   ;   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+0000             13   ;   Lesser General Public License for more details.
+0000             14   ;
+0000             15   ;   You should have received a copy of the GNU Lesser General Public
+0000             16   ;   License along with this library; if not, write to the Free Software
+0000             17   ;   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+0000             18   ;
+0000             19       
+0000             20   P0     DATA  080H  ;PORT 0
+0000             21   SP     DATA  081H  ;STACK POINTER
+0000             22   DPL    DATA  082H  ;DATA POINTER 0 - LOW BYTE
+0000             23   DPH    DATA  083H  ;DATA POINTER 0 - HIGH BYTE
+0000             24   DPL1   DATA  084H  ;DATA POINTER 1 - LOW BYTE
+0000             25   DPH1   DATA  085H  ;DATA POINTER 1 - HIGH BYTE
+0000             26   DPS    DATA  086H  ;DATA POINTER SELECT. DPH1, DPL1 active when DPS.0=1
+0000             27   PCON   DATA  087H  ;POWER CONTROL
+0000             28   TCON   DATA  088H  ;TIMER CONTROL
+0000             29   TMOD   DATA  089H  ;TIMER MODE
+0000             30   TL0    DATA  08AH  ;TIMER 0 - LOW BYTE
+0000             31   TL1    DATA  08BH  ;TIMER 1 - LOW BYTE
+0000             32   TH0    DATA  08CH  ;TIMER 0 - HIGH BYTE
+0000             33   TH1    DATA  08DH  ;TIMER 1 - HIGH BYTE
+0000             34   P1     DATA  090H  ;PORT 1
+0000             35   SCON   DATA  098H  ;SERIAL PORT CONTROL
+0000             36   SBUF   DATA  099H  ;SERIAL PORT BUFFER
+0000             37   P2     DATA  0A0H  ;PORT 2
+0000             38   IE     DATA  0A8H  ;INTERRUPT ENABLE
+0000             39   P3     DATA  0B0H  ;PORT 3
+0000             40   IP     DATA  0B8H  ;INTERRUPT PRIORITY
+0000             41   T2CON  DATA  0C8H  ;TIMER 2 CONTROL
+0000             42   T2MOD  DATA  0C9H  ;TIMER 2 MODE
+0000             43   RCAP2L DATA  0CAH  ;TIMER 2 CAPTURE REGISTER - LOW BYTE
+0000             44   RCAP2H DATA  0CBH  ;TIMER 2 CAPTURE REGISTER - HIGH BYTE
+0000             45   TL2    DATA  0CCH  ;TIMER 2 - LOW BYTE
+0000             46   TH2    DATA  0CDH  ;TIMER 2 - HIGH BYTE
+0000             47   PSW    DATA  0D0H  ;PROGRAM STATUS WORD
+0000             48   ACC    DATA  0E0H  ;ACCUMULATOR
+0000             49   B      DATA  0F0H  ;MULTIPLICATION REGISTER
+0000             50   IT0    BIT   088H  ;TCON.0 - EXT. INTERRUPT 0 TYPE
+0000             51   IE0    BIT   089H  ;TCON.1 - EXT. INTERRUPT 0 EDGE FLAG
+0000             52   IT1    BIT   08AH  ;TCON.2 - EXT. INTERRUPT 1 TYPE
+0000             53   IE1    BIT   08BH  ;TCON.3 - EXT. INTERRUPT 1 EDGE FLAG
+0000             54   TR0    BIT   08CH  ;TCON.4 - TIMER 0 ON/OFF CONTROL
+0000             55   TF0    BIT   08DH  ;TCON.5 - TIMER 0 OVERFLOW FLAG
+0000             56   TR1    BIT   08EH  ;TCON.6 - TIMER 1 ON/OFF CONTROL
+0000             57   TF1    BIT   08FH  ;TCON.7 - TIMER 1 OVERFLOW FLAG
+0000             58   RI     BIT   098H  ;SCON.0 - RECEIVE INTERRUPT FLAG
+0000             59   TI     BIT   099H  ;SCON.1 - TRANSMIT INTERRUPT FLAG
+0000             60   RB8    BIT   09AH  ;SCON.2 - RECEIVE BIT 8
+0000             61   TB8    BIT   09BH  ;SCON.3 - TRANSMIT BIT 8
+0000             62   REN    BIT   09CH  ;SCON.4 - RECEIVE ENABLE
+0000             63   SM2    BIT   09DH  ;SCON.5 - SERIAL MODE CONTROL BIT 2
+0000             64   SM1    BIT   09EH  ;SCON.6 - SERIAL MODE CONTROL BIT 1
+0000             65   SM0    BIT   09FH  ;SCON.7 - SERIAL MODE CONTROL BIT 0
+0000             66   EX0    BIT   0A8H  ;IE.0 - EXTERNAL INTERRUPT 0 ENABLE
+0000             67   ET0    BIT   0A9H  ;IE.1 - TIMER 0 INTERRUPT ENABLE
+0000             68   EX1    BIT   0AAH  ;IE.2 - EXTERNAL INTERRUPT 1 ENABLE
+0000             69   ET1    BIT   0ABH  ;IE.3 - TIMER 1 INTERRUPT ENABLE
+0000             70   ES     BIT   0ACH  ;IE.4 - SERIAL PORT INTERRUPT ENABLE
+0000             71   ET2    BIT   0ADH  ;IE.5 - TIMER 2 INTERRUPT ENABLE
+0000             72   EA     BIT   0AFH  ;IE.7 - GLOBAL INTERRUPT ENABLE
+0000             73   RXD    BIT   0B0H  ;P3.0 - SERIAL PORT RECEIVE INPUT
+0000             74   TXD    BIT   0B1H  ;P3.1 - SERIAL PORT TRANSMIT OUTPUT
+0000             75   INT0   BIT   0B2H  ;P3.2 - EXTERNAL INTERRUPT 0 INPUT
+0000             76   INT1   BIT   0B3H  ;P3.3 - EXTERNAL INTERRUPT 1 INPUT
+0000             77   T0     BIT   0B4H  ;P3.4 - TIMER 0 COUNT INPUT
+0000             78   T1     BIT   0B5H  ;P3.5 - TIMER 1 COUNT INPUT
+0000             79   WR     BIT   0B6H  ;P3.6 - WRITE CONTROL FOR EXT. MEMORY
+0000             80   RD     BIT   0B7H  ;P3.7 - READ CONTROL FOR EXT. MEMORY
+0000             81   PX0    BIT   0B8H  ;IP.0 - EXTERNAL INTERRUPT 0 PRIORITY
+0000             82   PT0    BIT   0B9H  ;IP.1 - TIMER 0 PRIORITY
+0000             83   PX1    BIT   0BAH  ;IP.2 - EXTERNAL INTERRUPT 1 PRIORITY
+0000             84   PT1    BIT   0BBH  ;IP.3 - TIMER 1 PRIORITY
+0000             85   PS     BIT   0BCH  ;IP.4 - SERIAL PORT PRIORITY
+0000             86   PT2    BIT   0BDH  ;IP.5 - TIMER 2 PRIORITY
+0000             87   CAP2   BIT   0C8H  ;T2CON.0 - CAPTURE OR RELOAD SELECT
+0000             88   CNT2   BIT   0C9H  ;T2CON.1 - TIMER OR COUNTER SELECT
+0000             89   TR2    BIT   0CAH  ;T2CON.2 - TIMER 2 ON/OFF CONTROL
+0000             90   EXEN2  BIT   0CBH  ;T2CON.3 - TIMER 2 EXTERNAL ENABLE FLAG
+0000             91   TCLK   BIT   0CCH  ;T2CON.4 - TRANSMIT CLOCK SELECT
+0000             92   RCLK   BIT   0CDH  ;T2CON.5 - RECEIVE CLOCK SELECTT
+0000             93   EXF2   BIT   0CEH  ;T2CON.6 - EXTERNAL TRANSITION FLAG
+0000             94   TF2    BIT   0CFH  ;T2CON.7 - TIMER 2 OVERFLOW FLAG
+0000             95   P      BIT   0D0H  ;PSW.0 - ACCUMULATOR PARITY FLAG
+0000             96   OV     BIT   0D2H  ;PSW.2 - OVERFLOW FLAG
+0000             97   RS0    BIT   0D3H  ;PSW.3 - REGISTER BANK SELECT 0
+0000             98   RS1    BIT   0D4H  ;PSW.4 - REGISTER BANK SELECT 1
+0000             99   F0     BIT   0D5H  ;PSW.5 - FLAG 0
+0000            100   AC     BIT   0D6H  ;PSW.6 - AUXILIARY CARRY FLAG
+0000            101   CY     BIT   0D7H  ;PSW.7 - CARRY FLAG
+0000            102   
+0000            103   ; For the altera DE2 configured with an 8051/8052 softcore processor
+0000            104   ; we have the following extra registers:
+0000            105   
+0000            106   HEX0   DATA  091H ; Zero turns the segment on
+0000            107   HEX1   DATA  092H ; 
+0000            108   HEX2   DATA  093H ; 
+0000            109   HEX3   DATA  094H ; 
+0000            110   HEX4   DATA  08EH ;
+0000            111   HEX5   DATA  08FH ;
+0000            112   HEX6   DATA  096H ;
+0000            113   HEX7   DATA  097H ;
+0000            114   
+0000            115   P0MOD  DATA  09AH ; Input/output mode bits for port 0.  '1' sets the port to output mode.
+0000            116   P1MOD  DATA  09BH ; Input/output mode bits for port 1
+0000            117   P2MOD  DATA  09CH ; Input/output mode bits for port 2
+0000            118   P3MOD  DATA  09DH ; Input/output mode bits for port 3
+0000            119   
+0000            120   LEDRA  DATA  0E8H ; LEDs LEDR0 to LEDR7 (bit addressable, ex: LEDRA.1 for LEDR1)
+0000            121   LEDRB  DATA  095H ; LEDs LEDR8 to LEDR15
+0000            122   LEDRC  DATA  09EH ; LEDs LEDR16, LEDR15, and LEDG8
+0000            123   LEDG   DATA  0F8H ; LEDs LEDG0 to LEDG7 (bit addressable, ex: LEDG.3 for LEDG3)
+0000            124   SWA    DATA  0E8H ; Switches SW0 to SW7 (bit addressable, ex: SWA.1 for SW1)
+0000            125   SWB    DATA  095H ; Switches SW8 to SW15
+0000            126   SWC    DATA  09EH ; Switches SW16 and SW17
+0000            127   KEY    DATA  0F8H ; KEY1=KEY.1, KEY2=KEY.2, KEY3=KEY.3.  KEY0 is the reset button! 
+0000            128   
+0000            129   LCD_CMD   DATA 0D8H ;
+0000            130   LCD_DATA  DATA 0D9H ;
+0000            131   LCD_MOD   DATA 0DAH ; Write 0xff to make LCD_DATA an output
+0000            132   LCD_RW    BIT  0D8H ; '0' writes to LCD
+0000            133   LCD_EN    BIT  0D9H ; Toggle from '1' to '0'
+0000            134   LCD_RS    BIT  0DAH ; '0' for commands, '1' for data
+0000            135   LCD_ON    BIT  0DBH ; Write '1' to power the LCD
+0000            136   LCD_BLON  BIT  0DCH ; Write '1' to turn on back light
+0000            137   
+0000            138   FLASH_CMD  data 0DBH ; The control bits of the flash memory:
+0000            139   ; bit 0: FL_RST_N  Set to 1 for normal operation
+0000            140   ; bit 1: FL_WE_N
+0000            141   ; bit 2: FL_OE_N
+0000            142   ; bit 3: FL_CE_N
+0000            143   FLASH_DATA data 0DCH ; 8-bit data bus of flash memory.
+0000            144   FLASH_MOD  data 0DDH ; 0xff makes FLASH_DATA output.  0x00 makes FLASH_DATA input.
+0000            145   FLASH_ADD0 data 0E1H ; address bits 0 to 7.
+0000            146   FLASH_ADD1 data 0E2H ; address bits 8 to 15.
+0000            147   FLASH_ADD2 data 0E3H ; address bits 16 to 21.
+0000            148   
+0000              4   
+0000              5   org 0000H ; After reset, the processor starts at location zero
+0000 02002A       6            ljmp myprogram
+0003              7            
+0003              8   ; For a 33.33 MHz clock takes 30ns
+0003              9   
+0003             10   NUMBER_0 EQU #0xC0
+0003             11   NUMBER_1 EQU #0xF9
+0003             12   NUMBER_2 EQU #0xA4
+0003             13   NUMBER_3 EQU #0xB0
+0003             14   NUMBER_4 EQU #0x99
+0003             15   NUMBER_5 EQU #0x92
+0003             16   NUMBER_6 EQU #0x82
+0003             17   NUMBER_7 EQU #0xF8
+0003             18   NUMBER_8 EQU #0x80
+0003             19   NUMBER_9 EQU #0x90
+0003             20   LETTER_H EQU #0x09
+0003             21   LETTER_E EQU #0x06
+0003             22   LETTER_L EQU #0x47
+0003             23   LETTER_O EQU #0x40
+0003             24   LETTER_C EQU #0x46
+0003             25   LETTER_P EQU #0x0C
+0003             26   LETTER_N EQU #0x48
+0003             27   
+0003             28   BLANK    EQU #0xff
+0003             29   
+0003             30   
+0003             31   
+0003             32   
+0003             33   WaitQuarterSec:
+0003 7A2D        34            mov R2, #45
+0005 79FA        35   L9: mov R1, #250
+0007 78FA        36   L8: mov R0, #250
+0009 D8FE        37   L7: djnz R0, L7 ; 3 machine cycles -> 3*30ns*250 = 22.5 us
+000B D9FA        38            djnz R1, L8 ; 22.5 us * 250 = 5.625 ms
+000D DAF6        39            djnz R2, L9 ; 5.625 ms * 45 = 0.25 s (approximately)
+000F 22          40            ret
+0010             41   
+0010             42   WaitHalfSec:
+0010 7A5A        43            mov R2, #90
+0012 79FA        44   L3: mov R1, #250
+0014 78FA        45   L2: mov R0, #250
+0016 D8FE        46   L1: djnz R0, L1 ; 3 machine cycles -> 3*30ns*250 = 22.5 us
+0018 D9FA        47            djnz R1, L2 ; 22.5 us * 250 = 5.625 ms
+001A DAF6        48            djnz R2, L3 ; 5.625 ms * 90 = 0.5 s (approximately)
+001C 22          49            ret
+001D             50   
+001D             51            
+001D             52   WaitOneSec:
+001D 7AB4        53            mov R2, #180
+001F 79FA        54   L6: mov R1, #250
+0021 78FA        55   L5: mov R0, #250
+0023 D8FE        56   L4: djnz R0, L4 ; 3 machine cycles -> 3*30ns*250 = 22.5 us
+0025 D9FA        57            djnz R1, L5 ; 22.5 us * 250 = 5.625 ms
+0027 DAF6        58            djnz R2, L6 ; 5.625 ms * 180 = 1 s (approximately)
+0029 22          59            ret     
+002A             60   
+002A             61   myprogram:
+002A 75817F      62            mov SP, #7FH
+002D 75E800      63            mov LEDRA,#0 ; clear LEDRA register
+0030 759500      64            mov LEDRB,#0 ; clear LEDRB register
+0033             65            
+0033 7591F8      66            mov HEX0, NUMBER_7
+0036 759292      67            mov HEX1, NUMBER_5
+0039 7593B0      68            mov HEX2, NUMBER_3
+003C 7594B0      69            mov HEX3, NUMBER_3
+003F 758E80      70            mov HEX4, NUMBER_8
+0042 758FF8      71            mov HEX5, NUMBER_7
+0045 7EF9        72            mov R6, NUMBER_1 
+0047 7D90        73            mov R5, NUMBER_9
+0049             74   
+0049             75            
+0049             76   Forever:
+0049             77            
+0049 B2E8        78            cpl LEDRA.0
+004B 20EA2F      79            jb SWA.2, Check_SW1_given_SW2_HIGH
+004E 20E96E      80            jb SWA.1, Check_SW0_given_SW2_LOW_SW1_HIGH
+0051 20E80E      81            jb SWA.0, Display_two_lsb
+0054             82            
+0054 B2EA        83            cpl LEDRA.2
+0056             84            
+0056             85            ; do 000:
+0056 7EF9        86            mov R6, NUMBER_1 
+0058 7D90        87            mov R5, NUMBER_9
+005A 7F02        88            mov R7, #2
+005C 1201D4      89            lcall Display_six_msb
+005F             90            
+005F 020049      91            ljmp Forever     ; this creates an unconditional jump back to 
+0062             92   
+0062             93   
+0062             94            
+0062             95   Display_two_lsb:
+0062 7591F9      96            mov HEX0, NUMBER_1
+0065 759290      97            mov HEX1, NUMBER_9
+0068 7593FF      98            mov HEX2, BLANK
+006B 7594FF      99            mov HEX3, BLANK
+006E 758EFF     100            mov HEX4, BLANK
+0071 758FFF     101            mov HEX5, BLANK
+0074 7EF9       102            mov R6, NUMBER_1 
+0076 7D90       103            mov R5, NUMBER_9
+0078 7F02       104            mov R7, #2
+007A 020049     105            ljmp Forever
+007D            106                    
+007D            107   Check_SW1_given_SW2_HIGH:
+007D            108            
+007D 20E906     109            jb SWA.1, Check_SW0_given_SW2_SW1_HIGH
+0080            110            
+0080 20E809     111            jb SWA.0, do_101
+0083            112            
+0083            113            ; do case 100
+0083 1201E9     114            lcall Blink_six_lsb
+0086            115            
+0086            116   
+0086            117   Check_SW0_given_SW2_SW1_HIGH:
+0086 20E803     118            jb SWA.0, do_111
+0089            119            
+0089 1200F6     120            lcall Check_SW3_110
+008C            121   
+008C            122   do_101:
+008C            123            
+008C            124            
+008C            125   do_111:
+008C            126   
+008C 7591FF     127            mov HEX0, BLANK
+008F 759292     128            mov HEX1, NUMBER_5
+0092 7593FF     129            mov HEX2, BLANK
+0095 7594B0     130            mov HEX3, NUMBER_3
+0098 758EFF     131            mov HEX4, BLANK
+009B 758FF8     132            mov HEX5, NUMBER_7
+009E            133            
+009E 120010     134            lcall WaitHalfSec
+00A1            135            
+00A1 7591F8     136            mov HEX0, NUMBER_7
+00A4 7592FF     137            mov HEX1, BLANK
+00A7 7593B0     138            mov HEX2, NUMBER_3
+00AA 7594FF     139            mov HEX3, BLANK
+00AD 758E80     140            mov HEX4, NUMBER_8
+00B0 758FFF     141            mov HEX5, BLANK
+00B3            142            
+00B3 120010     143            lcall WaitHalfSec
+00B6            144            
+00B6 7EF9       145            mov R6, NUMBER_1 
+00B8 7D90       146            mov R5, NUMBER_9
+00BA 7F02       147            mov R7, #2
+00BC            148            
+00BC 020049     149            ljmp Forever
+00BF            150            
+00BF            151   Check_SW0_given_SW2_LOW_SW1_HIGH:
+00BF            152            
+00BF            153   
+00BF            154            ; we need to initialize the display to the six msb of the student number
+00BF 1200C2     155            lcall LOOP
+00C2            156            
+00C2            157   
+00C2            158   LOOP:
+00C2            159            
+00C2 DF06       160            djnz R7, reset_display
+00C4            161            
+00C4            162            ; do 011        
+00C4 20E820     163            jb SWA.0, Check_SW3_011
+00C7            164            
+00C7            165            ; do 010:
+00C7 12018B     166            lcall Check_SW3_010
+00CA            167            
+00CA            168   reset_display:
+00CA 7591F8     169            mov HEX0, NUMBER_7
+00CD 759292     170            mov HEX1, NUMBER_5
+00D0 7593B0     171            mov HEX2, NUMBER_3
+00D3 7594B0     172            mov HEX3, NUMBER_3
+00D6 758E80     173            mov HEX4, NUMBER_8
+00D9 758FF8     174            mov HEX5, NUMBER_7
+00DC            175            
+00DC 7F01       176            mov R7, #1
+00DE 7EF9       177            mov R6, NUMBER_1 
+00E0 7D90       178            mov R5, NUMBER_9
+00E2            179            
+00E2 B2EE       180            cpl LEDRA.6     
+00E4            181            
+00E4 120049     182            lcall Forever
+00E7            183            
+00E7            184   Check_SW3_011:
+00E7            185            ; case 011 for when sw3 is one
+00E7 20EB06     186            jb SWA.3, Right_move_half_sec
+00EA            187            
+00EA            188            ; case 011 for when sw3 is zero:
+00EA 12001D     189            lcall WaitOneSec
+00ED 1201B8     190            lcall Scroll_Right
+00F0            191   
+00F0            192   Right_move_half_sec:
+00F0 120010     193            lcall WaitHalfSec
+00F3 1201B8     194            lcall Scroll_Right
+00F6            195   
+00F6            196            
+00F6            197   Check_SW3_110:
+00F6 20EB48     198            jb SWA.3, do_110_half_sec
+00F9            199            
+00F9            200            ; do 110 one sec
+00F9 7591FF     201            mov HEX0, BLANK
+00FC 759240     202            mov HEX1, LETTER_O
+00FF 759347     203            mov HEX2, LETTER_L
+0102 759447     204            mov HEX3, LETTER_L
+0105 758E06     205            mov HEX4, LETTER_E
+0108 758F09     206            mov HEX5, LETTER_H
+010B            207            
+010B 12001D     208            lcall WaitOneSec
+010E            209            
+010E 7591F8     210            mov HEX0, NUMBER_7
+0111 759292     211            mov HEX1, NUMBER_5
+0114 7593B0     212            mov HEX2, NUMBER_3
+0117 7594B0     213            mov HEX3, NUMBER_3
+011A 758E80     214            mov HEX4, NUMBER_8
+011D 758FF8     215            mov HEX5, NUMBER_7
+0120            216            
+0120 12001D     217            lcall WaitOneSec
+0123            218            
+0123 7591A4     219            mov HEX0, NUMBER_2
+0126 7592F9     220            mov HEX1, NUMBER_1
+0129 7593B0     221            mov HEX2, NUMBER_3
+012C 759448     222            mov HEX3, LETTER_N
+012F 758E0C     223            mov HEX4, LETTER_P   
+0132 758F46     224            mov HEX5, LETTER_C
+0135            225            
+0135 12001D     226            lcall WaitOneSec
+0138            227            
+0138 7EF9       228            mov R6, NUMBER_1 
+013A 7D90       229            mov R5, NUMBER_9
+013C 7F02       230            mov R7, #2
+013E            231            
+013E 020049     232            ljmp Forever
+0141            233            
+0141            234   do_110_half_sec:
+0141            235            
+0141 7591FF     236            mov HEX0, BLANK
+0144 759240     237            mov HEX1, LETTER_O
+0147 759347     238            mov HEX2, LETTER_L
+014A 759447     239            mov HEX3, LETTER_L
+014D 758E06     240            mov HEX4, LETTER_E
+0150 758F09     241            mov HEX5, LETTER_H
+0153            242            
+0153 120010     243            lcall WaitHalfSec
+0156            244            
+0156 7591F8     245            mov HEX0, NUMBER_7
+0159 759292     246            mov HEX1, NUMBER_5
+015C 7593B0     247            mov HEX2, NUMBER_3
+015F 7594B0     248            mov HEX3, NUMBER_3
+0162 758E80     249            mov HEX4, NUMBER_8
+0165 758FF8     250            mov HEX5, NUMBER_7
+0168            251            
+0168 120010     252            lcall WaitHalfSec
+016B            253            
+016B 7591A4     254            mov HEX0, NUMBER_2
+016E 7592F9     255            mov HEX1, NUMBER_1
+0171 7593B0     256            mov HEX2, NUMBER_3
+0174 759448     257            mov HEX3, LETTER_N
+0177 758E46     258            mov HEX4, LETTER_C
+017A 758F46     259            mov HEX5, LETTER_C
+017D B2E9       260            cpl LEDRA.1 ; Turn LEDR0 on/off
+017F            261            
+017F 120010     262            lcall WaitHalfSec
+0182            263            
+0182 7EF9       264            mov R6, NUMBER_1 
+0184 7D90       265            mov R5, NUMBER_9
+0186 7F02       266            mov R7, #2
+0188            267            
+0188 020049     268            ljmp Forever
+018B            269            
+018B            270            
+018B            271   Check_SW3_010:
+018B            272            ; case 010 for when sw3 is one:
+018B 20EB06     273            jb SWA.3, Left_move_half_sec
+018E            274            
+018E            275            ; case 010 for when sw3 is zero:
+018E 12001D     276            lcall WaitOneSec
+0191 12019A     277            lcall Scroll_Left
+0194            278   
+0194            279   Left_move_half_sec:
+0194 120010     280            lcall WaitHalfSec
+0197 12019A     281            lcall Scroll_Left
+019A            282            
+019A            283   Scroll_Left:
+019A            284            
+019A AC8F       285            mov R4, HEX5    
+019C 858E8F     286            mov HEX5, HEX4
+019F 85948E     287            mov HEX4, HEX3
+01A2 859394     288            mov HEX3, HEX2
+01A5 859293     289            mov HEX2, HEX1
+01A8 859192     290            mov HEX1, HEX0
+01AB 8D91       291            mov HEX0, R5
+01AD            292            ;mov R5, R6
+01AD            293            ;mov R6, R4
+01AD B2EB       294            cpl LEDRA.3
+01AF EE         295            mov A, R6
+01B0 FD         296            mov R5, A
+01B1            297            
+01B1 EC         298            mov A, R4
+01B2 FE         299            mov R6, A
+01B3            300            
+01B3 7F01       301            mov R7, #1
+01B5            302            
+01B5            303            
+01B5 020049     304            ljmp Forever ; Repeat forever
+01B8            305                    
+01B8            306   Scroll_Right:
+01B8 AC91       307            mov R4, HEX0
+01BA 859291     308            mov HEX0, HEX1  
+01BD 859392     309            mov HEX1, HEX2  
+01C0 859493     310            mov HEX2, HEX3  
+01C3 858E94     311            mov HEX3, HEX4  
+01C6 858F8E     312            mov HEX4, HEX5  
+01C9 8E8F       313            mov HEX5, R6
+01CB            314            
+01CB            315            ;mov R6, R5     
+01CB ED         316            mov A, R5
+01CC FE         317            mov R6, A
+01CD            318            
+01CD            319            ; mov R5, R4
+01CD EC         320            mov A, R4
+01CE FD         321            mov R5, A
+01CF            322            
+01CF 7F01       323            mov R7, #1
+01D1            324                    
+01D1 020049     325            ljmp Forever ; Repeat forever
+01D4            326   
+01D4            327            
+01D4            328   Display_six_msb:
+01D4 7591F8     329            mov HEX0, NUMBER_7
+01D7 759292     330            mov HEX1, NUMBER_5
+01DA 7593B0     331            mov HEX2, NUMBER_3
+01DD 7594B0     332            mov HEX3, NUMBER_3
+01E0 758E80     333            mov HEX4, NUMBER_8
+01E3 758FF8     334            mov HEX5, NUMBER_7
+01E6 020049     335            ljmp Forever
+01E9            336            
+01E9            337   Blink_six_lsb:
+01E9            338   
+01E9 20EB33     339            jb SWA.3, Blink_six_lsb_half_sec
+01EC            340            
+01EC 7591F9     341            mov HEX0, NUMBER_1
+01EF 759290     342            mov HEX1, NUMBER_9
+01F2 7593F8     343            mov HEX2, NUMBER_7
+01F5 759492     344            mov HEX3, NUMBER_5
+01F8 758EB0     345            mov HEX4, NUMBER_3
+01FB 758FB0     346            mov HEX5, NUMBER_3
+01FE            347            
+01FE 120010     348            lcall WaitHalfSec
+0201 7591FF     349            mov HEX0, BLANK
+0204 7592FF     350            mov HEX1, BLANK
+0207 7593FF     351            mov HEX2, BLANK
+020A 7594FF     352            mov HEX3, BLANK
+020D 758EFF     353            mov HEX4, BLANK
+0210 758FFF     354            mov HEX5, BLANK
+0213 120010     355            lcall WaitHalfSec
+0216            356            
+0216 7EF9       357            mov R6, NUMBER_1 
+0218 7D90       358            mov R5, NUMBER_9
+021A 7F02       359            mov R7, #2
+021C            360            
+021C 020049     361            ljmp Forever
+021F            362            
+021F            363   Blink_six_lsb_half_sec:
+021F            364   
+021F 7591F9     365            mov HEX0, NUMBER_1
+0222 759290     366            mov HEX1, NUMBER_9
+0225 7593F8     367            mov HEX2, NUMBER_7
+0228 759492     368            mov HEX3, NUMBER_5
+022B 758EB0     369            mov HEX4, NUMBER_3
+022E 758FB0     370            mov HEX5, NUMBER_3
+0231            371            
+0231 120003     372            lcall WaitQuarterSec
+0234 7591FF     373            mov HEX0, BLANK
+0237 7592FF     374            mov HEX1, BLANK
+023A 7593FF     375            mov HEX2, BLANK
+023D 7594FF     376            mov HEX3, BLANK
+0240 758EFF     377            mov HEX4, BLANK
+0243 758FFF     378            mov HEX5, BLANK
+0246 120003     379            lcall WaitQuarterSec
+0249            380            
+0249 7EF9       381            mov R6, NUMBER_1 
+024B 7D90       382            mov R5, NUMBER_9
+024D 7F02       383            mov R7, #2
+024F            384            
+024F 020049     385            ljmp Forever    
+0252            386   
+0252            387   END
